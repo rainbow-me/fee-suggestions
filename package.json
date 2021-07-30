@@ -1,11 +1,29 @@
 {
-  "name": "eip1559",
+  "name": "eip1559-fee-suggestions-ethers",
+  "description": "JavaScript library that suggest fees on Ethereum after EIP-1559 using historical data using ethers.js",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/index.js",
   "license": "MIT",
+  "keywords": [
+    "javascript",
+    "ethereum",
+    "eip1559",
+    "ethers",
+    "web3",
+    "dapp"
+  ],
+  "author": "Bruno Barbieri",
+  "bugs": {
+    "url": "https://github.com/rainbow-me/eip-1559-fee-suggestions/issues"
+  },
+  "homepage": "https://github.com/rainbow-me/eip-1559-fee-suggestions#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rainbow-me/eip-1559-fee-suggestions.git"
+  },
   "scripts": {
     "start": "ts-node demo.ts",
-    "build": "tsc"
+    "build": "tsc src/index.ts --outDir dist"
   },
   "dependencies": {
     "ethers": "^5.4.2"
