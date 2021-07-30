@@ -1,6 +1,12 @@
 # 🔥🔥🔥 EIP1559 fee suggestions 🔥🔥🔥
 
- The function suggestFees() is a utility function written in Javascript and it's intended to use with an [ethers.js](https://docs.ethers.io/v5/) provider. It returns a list of suggested maxFeePerGas / maxPriorityFeePerGas pairs where the index of the list is the timeFactor. A low timeFactor should be used for urgent transactions while higher values yield more economical suggestions that are expected to require more blocks to get included with a given chance. Note that the relationship between timeFactor and inclusion chance in future blocks is not exactly determined but depends on the market behavior. Some rough estimates for this relationship might be calculated once we have actual market data to analyze.
+ The function suggestFees() is a utility function written in Javascript and it's intended to use with an [ethers.js](https://docs.ethers.io/v5/) provider.
+ 
+It returns a list of suggested maxFeePerGas / maxPriorityFeePerGas pairs where the index of the list is the timeFactor. 
+
+A low timeFactor should be used for urgent transactions while higher values yield more economical suggestions that are expected to require more blocks to get included with a given chance. 
+ 
+Note that the relationship between timeFactor and inclusion chance in future blocks is not exactly determined but depends on the market behavior. Some rough estimates for this relationship might be calculated once we have actual market data to analyze.
 
 The application frontend might display the fees vs time factor as a bar graph or curve. The steepness of this curve might also give a hint to users on whether there is currently a local congestion.
 
