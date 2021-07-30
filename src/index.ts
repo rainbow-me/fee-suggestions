@@ -64,7 +64,11 @@ export const suggestFees = async (provider: JsonRpcProvider, sampleMin = 0.1, sa
             maxPriorityFeePerGas: Math.round(t),
         };
     }
-    return result;
+    const highPriority = result[0];
+    const midPriority = result[result.length / 2 - 1];
+    const lowPriority = result[result.length - 1];
+
+    return { highPriority, midPriority, lowPriority };
 }
 
 // suggestTip suggests a tip (maxPriorityFeePerGas) value that's usually sufficient for blocks that are not full.
