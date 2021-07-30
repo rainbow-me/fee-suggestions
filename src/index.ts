@@ -1,6 +1,15 @@
 import { BigNumber } from "ethers";
-import { formatUnits } from "ethers/lib/utils";
 import { JsonRpcProvider } from "@ethersproject/providers";
+
+type Reward = string[];
+type GasUsedRatio = number[];
+
+interface FeeHistoryResponse {
+    baseFeePerGas: string[],
+    gasUsedRatio: GasUsedRatio,
+    oldestBlock: number,
+    reward: Reward[],
+}
 
 /*
 suggestFees returns a series of maxFeePerGas / maxPriorityFeePerGas values suggested for different time preferences. 
@@ -21,7 +30,7 @@ export const suggestFees = async (
 ) => {
   // feeHistory API call without a reward percentile specified is cheap even with a light client backend because it only needs block headers.
   // Therefore we can afford to fetch a hundred blocks of base fee history in order to make meaningful estimates on variable time scales.
-  const feeHistory = await provider.send("eth_feeHistory", [100, "latest", []]);
+  const feeHistory: FeeHistoryResponse = await provider.send("eth_feeHistory", [100, "latest", []]);
   const baseFee: number[] = [];
   const order = [];
   for (let i = 0; i < feeHistory.baseFeePerGas.length; i++) {
@@ -82,7 +91,7 @@ export const suggestFees = async (
 // suggestTip suggests a tip (maxPriorityFeePerGas) value that's usually sufficient for blocks that are not full.
 const suggestTip = async (
   firstBlock: number,
-  gasUsedRatio: string | any[],
+  gasUsedRatio: GasUsedRatio,
   fallbackTip: number,
   provider: JsonRpcProvider
 ) => {
@@ -93,7 +102,7 @@ const suggestTip = async (
     const blockCount = maxBlockCount(gasUsedRatio, ptr, needBlocks);
     if (blockCount > 0) {
       // feeHistory API call with reward percentile specified is expensive and therefore is only requested for a few non-full recent blocks.
-      const feeHistory = await provider.send("eth_feeHistory", [
+      const feeHistory: FeeHistoryResponse = await provider.send("eth_feeHistory", [
         blockCount,
         BigNumber.from(firstBlock + ptr).toHexString(),
         [10],
@@ -118,7 +127,7 @@ const suggestTip = async (
 
 // maxBlockCount returns the number of consecutive blocks suitable for tip suggestion (gasUsedRatio between 0.1 and 0.9).
 const maxBlockCount = (
-  gasUsedRatio: string | any[],
+  gasUsedRatio: GasUsedRatio,
   ptr: number,
   needBlocks: number
 ) => {
