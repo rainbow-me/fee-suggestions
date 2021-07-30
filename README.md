@@ -51,7 +51,9 @@ main();
 ### To test it locally
 
 1 - Install deps via `yarn`
+
 2 - Add your infura API_KEY on `demo.ts:5`
+
 3 - `yarn start`
 
 
