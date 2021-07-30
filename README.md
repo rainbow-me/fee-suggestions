@@ -2,7 +2,7 @@
 
 
 This is a utility function in Javascript that returns returns a series of maxFeePerGas / maxPriorityFeePerGas values suggested for different time preferences.
-The return value is an array that looks like this:
+The return value is an object that looks like this:
 
 ```
 {
