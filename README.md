@@ -1,6 +1,9 @@
 # 🔥🔥🔥 EIP1559 fee suggestions 🔥🔥🔥
 
-This is a utility function in Javascript that returns returns a series of maxFeePerGas / maxPriorityFeePerGas values suggested for different time preferences.
+ The function suggestFees() is a utility function written in Javascript and it's intended to use with an ethers.js provider. It returns a list of suggested maxFeePerGas / maxPriorityFeePerGas pairs where the index of the list is the timeFactor. A low timeFactor should be used for urgent transactions while higher values yield more economical suggestions that are expected to require more blocks to get included with a given chance. Note that the relationship between timeFactor and inclusion chance in future blocks is not exactly determined but depends on the market behavior. Some rough estimates for this relationship might be calculated once we have actual market data to analyze.
+
+The application frontend might display the fees vs time factor as a bar graph or curve. The steepness of this curve might also give a hint to users on whether there is currently a local congestion.
+
 The return value is an array that looks like this:
 
 ```
@@ -48,12 +51,11 @@ main();
 
 1 - Install deps via `yarn`
 
-2 - Add your infura API_KEY on `demo.ts:5`
+2 - Add your Infura API_KEY on `demo.ts:4`
 
 3 - `yarn start`
 
 ### Credits
 
-This code is 100% based on the work of @zsfelfoldi published at https://github.com/zsfelfoldi/ethereum-docs/blob/master/eip1559/feeHistory_example.js
-
-It only adds compatibility for ethers and some es6 minor changes.
+This code is 100% based on the work of [@zsfelfoldi](https://github.com/zsfelfoldi) published at https://github.com/zsfelfoldi/feehistory/
+It only adds compatibility for ethers and some JS related minor changes.

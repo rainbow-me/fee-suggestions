@@ -22,15 +22,17 @@ The window width corresponds to the time preference of the user. The underlying 
 */
 export const suggestFees = async (
   provider: JsonRpcProvider,
+  blockCountHistory = 100,
   sampleMin = 0.1,
   sampleMax = 0.3,
   maxTimeFactor = 15,
   extraTipRatio = 0.25,
-  fallbackTip = 5e9
+  fallbackTip = 2e9
 ) => {
   // feeHistory API call without a reward percentile specified is cheap even with a light client backend because it only needs block headers.
   // Therefore we can afford to fetch a hundred blocks of base fee history in order to make meaningful estimates on variable time scales.
-  const feeHistory: FeeHistoryResponse = await provider.send("eth_feeHistory", [100, "latest", []]);
+  const feeHistory: FeeHistoryResponse = await provider.send("eth_feeHistory", [blockCountHistory, "latest", []]);
+  console.log('feeHistory', feeHistory);
   const baseFee: number[] = [];
   const order = [];
   for (let i = 0; i < feeHistory.baseFeePerGas.length; i++) {
