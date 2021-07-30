@@ -1,28 +1,15 @@
-#  EIP1559 fee suggestions 
+# 🔥🔥🔥 EIP1559 fee suggestions 🔥🔥🔥
 
 
 This is a utility function in Javascript that returns returns a series of maxFeePerGas / maxPriorityFeePerGas values suggested for different time preferences.
-The return value is an array that looks like this:
+The return value is an object that looks like this:
 
 ```
-[
-  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172751, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172751, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172751, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172750, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172750, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172750, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172750, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172750, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172750, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172750, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172750, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172750, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172750, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172750, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172750, maxPriorityFeePerGas: 1026172743 }
-]
+{
+  highPriority: { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172743 },
+  midPriority: { maxFeePerGas: 1026172751, maxPriorityFeePerGas: 1026172743 },
+  lowPriority: { maxFeePerGas: 1026172750, maxPriorityFeePerGas: 1026172743 }
+}
 ```
 
 
@@ -51,11 +38,14 @@ main();
 ### To test it locally
 
 1 - Install deps via `yarn`
+
 2 - Add your infura API_KEY on `demo.ts:5`
+
 3 - `yarn start`
 
 
 ### Credits
 
 This code is 100% based on the work of @zsfelfoldi published at https://github.com/zsfelfoldi/ethereum-docs/blob/master/eip1559/feeHistory_example.js
+
 It only adds compatibility for ethers and some es6 minor changes.
