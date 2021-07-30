@@ -5,24 +5,11 @@ This is a utility function in Javascript that returns returns a series of maxFee
 The return value is an array that looks like this:
 
 ```
-[
-  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172751, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172751, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172751, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172750, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172750, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172750, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172750, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172750, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172750, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172750, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172750, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172750, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172750, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172750, maxPriorityFeePerGas: 1026172743 },
-  { maxFeePerGas: 1026172750, maxPriorityFeePerGas: 1026172743 }
-]
+{
+  highPriority: { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172743 },
+  midPriority: { maxFeePerGas: 1026172751, maxPriorityFeePerGas: 1026172743 },
+  lowPriority: { maxFeePerGas: 1026172750, maxPriorityFeePerGas: 1026172743 }
+}
 ```
 
 
