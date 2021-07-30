@@ -1,4 +1,4 @@
-#  EIP1559 fee suggestions 
+# 🔥🔥🔥 EIP1559 fee suggestions 🔥🔥🔥
 
 
 This is a utility function in Javascript that returns returns a series of maxFeePerGas / maxPriorityFeePerGas values suggested for different time preferences.
