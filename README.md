@@ -1,4 +1,4 @@
-# 🔥🔥🔥 EIP1559 fee suggestions 🔥🔥🔥
+# 🔥 EIP-1559 fee suggestions 🔥
 
  The function suggestFees() is a utility function written in Javascript and it's intended to use with an [ethers.js](https://docs.ethers.io/v5/) provider.
  
@@ -52,6 +52,15 @@ const main = async() => {
 
 main();
 ```
+
+Optional parameters are:
+
+ - `blockCountHistory` defaults to `100`
+ - `sampleMin` defaults to  `0.1`
+ - `sampleMax` defaults to `0.3`
+ - `maxTimeFactor`  defaults to `15`
+ - `extraTipRatio` defaults to  `0.25`
+ - `fallbackTip` defaults to `2e9`
 
 ### To test it locally
 
