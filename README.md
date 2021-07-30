@@ -60,4 +60,5 @@ main();
 ### Credits
 
 This code is 100% based on the work of @zsfelfoldi published at https://github.com/zsfelfoldi/ethereum-docs/blob/master/eip1559/feeHistory_example.js
+
 It only adds compatibility for ethers and some es6 minor changes.
