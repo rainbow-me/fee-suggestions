@@ -23,8 +23,10 @@
   },
   "scripts": {
     "start": "ts-node demo.ts",
-    "build": "tsc src/index.ts --outDir dist"
+    "build": "tsc src/index.ts --outDir dist",
+    "publish": "yarn publish ./"
   },
+  "prepublish": "yarn build",
   "dependencies": {
     "ethers": "^5.4.2"
   },
