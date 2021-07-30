@@ -16,7 +16,7 @@ export const suggestFees = async (
   sampleMin = 0.1,
   sampleMax = 0.3,
   maxTimeFactor = 15,
-  extraTipRatio = 0.5,
+  extraTipRatio = 0.25,
   fallbackTip = 5e9
 ) => {
   // feeHistory API call without a reward percentile specified is cheap even with a light client backend because it only needs block headers.
@@ -75,11 +75,8 @@ export const suggestFees = async (
       maxPriorityFeePerGas: Math.round(t),
     };
   }
-  const highPriority = result[0];
-  const midPriority = result[result.length / 2 - 1];
-  const lowPriority = result[result.length - 1];
-
-  return { highPriority, midPriority, lowPriority };
+  
+  return result;
 };
 
 // suggestTip suggests a tip (maxPriorityFeePerGas) value that's usually sufficient for blocks that are not full.

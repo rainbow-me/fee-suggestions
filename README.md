@@ -1,17 +1,30 @@
 # 🔥🔥🔥 EIP1559 fee suggestions 🔥🔥🔥
 
 This is a utility function in Javascript that returns returns a series of maxFeePerGas / maxPriorityFeePerGas values suggested for different time preferences.
-The return value is an object that looks like this:
+The return value is an array that looks like this:
 
 ```
-{
-  highPriority: { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172743 },
-  midPriority: { maxFeePerGas: 1026172751, maxPriorityFeePerGas: 1026172743 },
-  lowPriority: { maxFeePerGas: 1026172750, maxPriorityFeePerGas: 1026172743 }
-}
+[
+  { maxFeePerGas: 1026172753, maxPriorityFeePerGas: 1026172744 },
+  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172744 },
+  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172744 },
+  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172744 },
+  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172744 },
+  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172744 },
+  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172744 },
+  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172744 },
+  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172744 },
+  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172744 },
+  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172744 },
+  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172744 },
+  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172744 },
+  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172744 },
+  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172744 },
+  { maxFeePerGas: 1026172751, maxPriorityFeePerGas: 1026172744 }
+]
 ```
 
-he first element corresponds to the highest time preference (most urgent transaction).
+The first element corresponds to the highest time preference (most urgent transaction).
 The basic idea behind the algorithm is similar to the old "gas price oracle" used in Geth; it takes the prices of recent blocks and makes a suggestion based on a low percentile of those prices. With EIP-1559 though the base fee of each block provides a less noisy and more reliable price signal. This allows for more sophisticated suggestions with a variable width (exponentially weighted) base fee time window. The window width corresponds to the time preference of the user. The underlying assumption is that price fluctuations over a given past time period indicate the probabilty of similar price levels being re-tested by the market over a similar length future time period.
 \*/
 
