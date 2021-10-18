@@ -32,7 +32,6 @@ export const suggestFees = async (
   // feeHistory API call without a reward percentile specified is cheap even with a light client backend because it only needs block headers.
   // Therefore we can afford to fetch a hundred blocks of base fee history in order to make meaningful estimates on variable time scales.
   const feeHistory: FeeHistoryResponse = await provider.send("eth_feeHistory", [blockCountHistory, "latest", []]);
-  console.log('feeHistory', feeHistory);
   const baseFee: number[] = [];
   const order = [];
   for (let i = 0; i < feeHistory.baseFeePerGas.length; i++) {
@@ -106,7 +105,7 @@ const suggestTip = async (
       // feeHistory API call with reward percentile specified is expensive and therefore is only requested for a few non-full recent blocks.
       const feeHistory: FeeHistoryResponse = await provider.send("eth_feeHistory", [
         blockCount,
-        BigNumber.from(firstBlock + ptr).toHexString(),
+        BigNumber.from(firstBlock).add(ptr).toHexString(),
         [10],
       ]);
       for (let i = 0; i < feeHistory.reward.length; i++) {
