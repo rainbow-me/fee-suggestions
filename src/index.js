@@ -61,7 +61,6 @@ var suggestFees = function (provider, blockCountHistory, sampleMin, sampleMax, m
                 case 0: return [4 /*yield*/, provider.send("eth_feeHistory", [blockCountHistory, "latest", []])];
                 case 1:
                     feeHistory = _a.sent();
-                    console.log('feeHistory', feeHistory);
                     baseFee = [];
                     order = [];
                     for (i = 0; i < feeHistory.baseFeePerGas.length; i++) {
@@ -132,7 +131,7 @@ var suggestTip = function (firstBlock, gasUsedRatio, fallbackTip, provider) { re
                 if (!(blockCount > 0)) return [3 /*break*/, 3];
                 return [4 /*yield*/, provider.send("eth_feeHistory", [
                         blockCount,
-                        ethers_1.BigNumber.from(firstBlock + ptr).toHexString(),
+                        ethers_1.BigNumber.from(firstBlock).add(ptr).toHexString(),
                         [10],
                     ])];
             case 2:
