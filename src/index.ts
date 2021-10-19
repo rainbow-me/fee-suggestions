@@ -11,6 +11,31 @@ interface FeeHistoryResponse {
     reward: Reward[],
 }
 
+
+export const calculateTrend = (data: number[]) => {
+    const increasing: number[] = []
+    const decreasing: number[] = []
+    const equals: number[] = []
+
+  data.map((item, index, array) => {
+      if (index > 0) {
+          const difference = item - array[index - 1];
+
+          if (difference === 0) equals.push(difference);
+          else if (difference > 0) increasing.push(difference);
+          else decreasing.push(difference);
+      }
+
+      return item;
+  });
+
+  if (increasing.length > (decreasing.length + equals.length)) return 1;
+  if (decreasing.length > (increasing.length + equals.length)) return -1;
+  if (equals.length > (increasing.length + decreasing.length)) return 0;
+
+  return 0;
+};
+
 /*
 suggestFees returns a series of maxFeePerGas / maxPriorityFeePerGas values suggested for different time preferences. 
 The first element corresponds to the highest time preference (most urgent transaction).
@@ -38,6 +63,8 @@ export const suggestFees = async (
     baseFee.push(Number(feeHistory.baseFeePerGas[i]));
     order.push(i);
   }
+
+  const trend = calculateTrend(baseFee)
 
   // If a block is full then the baseFee of the next block is copied. The reason is that in full blocks the minimal tip might not be enough to get included.
   // The last (pending) block is also assumed to end up being full in order to give some upwards bias for urgent suggestions.
@@ -86,7 +113,7 @@ export const suggestFees = async (
     };
   }
   
-  return result;
+  return {suggestions: result, trend};
 };
 
 // suggestTip suggests a tip (maxPriorityFeePerGas) value that's usually sufficient for blocks that are not full.
