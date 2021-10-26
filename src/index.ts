@@ -1,8 +1,9 @@
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { ema } from 'moving-averages';
+import BigNumber from 'bignumber.js';
 
 const toGwei = (wei:number) => {
-  return wei * Math.pow(10, -9)
+  return new BigNumber(wei).dividedBy(1000000000).toNumber()
 }
 
 type Reward = string[];
@@ -140,15 +141,11 @@ export const suggestMaxBaseFee = async (
     } else {
       bf = maxBaseFee;
     }
-    result[timeFactor] = {
-      maxFeePerGas: Math.round(bf),
-    };
+    result[timeFactor] = Math.round(bf)
   }
-  
-  return { baseFeeSuggestions: result, baseFeeTrend: trend };
-};
 
-const blockTimeSecs = 15
+  return { baseFeeSuggestion: Math.max(...result), baseFeeTrend: trend };
+};
 
 export const suggestMaxPriorityFee = async (
   provider: JsonRpcProvider,
@@ -156,34 +153,34 @@ export const suggestMaxPriorityFee = async (
 ) => {
   const feeHistory: FeeHistoryResponse = await provider.send("eth_feeHistory", [10, fromBlock, [10, 20, 25, 30, 40, 50]]);
   const blocksRewards = feeHistory.reward
-  const blocksRewardsPerc10 = blocksRewards.map(reward => reward[0])
-  const blocksRewardsPerc20 = blocksRewards.map(reward => reward[1])
-  const blocksRewardsPerc25 = blocksRewards.map(reward => reward[2])
-  const blocksRewardsPerc30 = blocksRewards.map(reward => reward[3])
-  const blocksRewardsPerc40 = blocksRewards.map(reward => reward[4])
-  const blocksRewardsPerc50 = blocksRewards.map(reward => reward[5])
+  const blocksRewardsPerc10 = blocksRewards.map(reward => Number(reward[0]))
+  const blocksRewardsPerc20 = blocksRewards.map(reward => Number(reward[1]))
+  const blocksRewardsPerc25 = blocksRewards.map(reward => Number(reward[2]))
+  const blocksRewardsPerc30 = blocksRewards.map(reward => Number(reward[3]))
+  const blocksRewardsPerc40 = blocksRewards.map(reward => Number(reward[4]))
+  const blocksRewardsPerc50 = blocksRewards.map(reward => Number(reward[5]))
 
-  const emaPerc10: number = ema(blocksRewardsPerc10, blocksRewardsPerc10.length)
-  const emaPerc20: number = ema(blocksRewardsPerc20, blocksRewardsPerc20.length)
-  const emaPerc25: number = ema(blocksRewardsPerc25, blocksRewardsPerc25.length)
-  const emaPerc30: number = ema(blocksRewardsPerc30, blocksRewardsPerc30.length)
-  const emaPerc40: number = ema(blocksRewardsPerc40, blocksRewardsPerc40.length)
-  const emaPerc50: number = ema(blocksRewardsPerc50, blocksRewardsPerc50.length)
+  const emaPerc10: number = Math.round(ema(blocksRewardsPerc10, blocksRewardsPerc10.length).at(-1))
+  const emaPerc20: number = Math.round(ema(blocksRewardsPerc20, blocksRewardsPerc20.length).at(-1))
+  const emaPerc25: number = Math.round(ema(blocksRewardsPerc25, blocksRewardsPerc25.length).at(-1))
+  const emaPerc30: number = Math.round(ema(blocksRewardsPerc30, blocksRewardsPerc30.length).at(-1))
+  const emaPerc40: number = Math.round(ema(blocksRewardsPerc40, blocksRewardsPerc40.length).at(-1))
+  const emaPerc50: number = Math.round(ema(blocksRewardsPerc50, blocksRewardsPerc50.length).at(-1))
 
   return { 
-    maxPriorityFeeSuggestions: { urgent: emaPerc40, fast: emaPerc25, normal: emaPerc20 },
+    maxPriorityFeeSuggestions: { urgent: emaPerc40, fast: emaPerc30, normal: emaPerc20 },
     confirmationTimeByPriorityFee: {
-      [emaPerc50]: blockTimeSecs,
-      [emaPerc40]: blockTimeSecs * 2,
-      [emaPerc30]: blockTimeSecs * 3,
-      [emaPerc25]: blockTimeSecs * 4,
-      [emaPerc10]: blockTimeSecs * 5,
+        15: emaPerc50,
+        30: emaPerc40,
+        45: emaPerc30,
+        60: emaPerc25,
+        75: emaPerc10,
       }
   }
 }
 
 export const suggestFees = async (provider: JsonRpcProvider) => {
-  const {baseFeeSuggestions, baseFeeTrend } = await suggestMaxBaseFee(provider)
+  const { baseFeeSuggestion, baseFeeTrend } = await suggestMaxBaseFee(provider)
   const { maxPriorityFeeSuggestions, confirmationTimeByPriorityFee } = await suggestMaxPriorityFee(provider)
-  return { maxPriorityFeeSuggestions, baseFeeSuggestions, baseFeeTrend, confirmationTimeByPriorityFee }
+  return { maxPriorityFeeSuggestions, baseFeeSuggestion, baseFeeTrend, confirmationTimeByPriorityFee }
 }

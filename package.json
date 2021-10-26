@@ -28,6 +28,7 @@
   },
   "prepublish": "yarn build",
   "dependencies": {
+    "bignumber.js": "^9.0.1",
     "ethers": "^5.4.2",
     "moving-averages": "^4.0.6"
   },
