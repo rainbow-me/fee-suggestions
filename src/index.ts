@@ -96,8 +96,7 @@ export const suggestMaxBaseFee = async (
   const baseFees: number[] = [];
   const order = [];
   for (let i = 0; i < feeHistory.baseFeePerGas.length; i++) {
-    const baseFeePerGas = toGwei(feeHistory.baseFeePerGas[i]);
-    baseFees.push(baseFeePerGas);
+    baseFees.push(toGwei(feeHistory.baseFeePerGas[i]));
     order.push(i);
   }
 
