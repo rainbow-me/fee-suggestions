@@ -28,7 +28,8 @@
   },
   "prepublish": "yarn build",
   "dependencies": {
-    "ethers": "^5.4.2"
+    "ethers": "^5.4.2",
+    "moving-averages": "^4.0.6"
   },
   "devDependencies": {
     "@types/node": "^16.11.1",
