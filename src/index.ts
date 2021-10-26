@@ -1,5 +1,4 @@
 import { JsonRpcProvider } from '@ethersproject/providers';
-import BigNumber from 'bignumber.js';
 import { ema } from 'moving-averages';
 import {
   FeeHistoryResponse,
@@ -135,7 +134,7 @@ export const suggestMaxBaseFee = async (
     } else {
       bf = maxBaseFee;
     }
-    result[timeFactor] = Math.round(bf);
+    result[timeFactor] = bf;
   }
 
   return { baseFeeSuggestion: Math.max(...result), baseFeeTrend: trend };
@@ -151,33 +150,37 @@ export const suggestMaxPriorityFee = async (
     [10, 20, 25, 30, 40, 50],
   ]);
   const blocksRewards = feeHistory.reward;
-  const blocksRewardsPerc10 = blocksRewards.map((reward) =>
-    new BigNumber(reward[0]).toNumber()
-  );
-  const blocksRewardsPerc20 = blocksRewards.map((reward) => Number(reward[1]));
-  const blocksRewardsPerc25 = blocksRewards.map((reward) => Number(reward[2]));
-  const blocksRewardsPerc30 = blocksRewards.map((reward) => Number(reward[3]));
-  const blocksRewardsPerc40 = blocksRewards.map((reward) => Number(reward[4]));
-  const blocksRewardsPerc50 = blocksRewards.map((reward) => Number(reward[5]));
+  const blocksRewardsPerc10 = blocksRewards.map((reward) => toGwei(reward[0]));
+  const blocksRewardsPerc20 = blocksRewards.map((reward) => toGwei(reward[1]));
+  const blocksRewardsPerc25 = blocksRewards.map((reward) => toGwei(reward[2]));
+  const blocksRewardsPerc30 = blocksRewards.map((reward) => toGwei(reward[3]));
+  const blocksRewardsPerc40 = blocksRewards.map((reward) => toGwei(reward[4]));
+  const blocksRewardsPerc50 = blocksRewards.map((reward) => toGwei(reward[5]));
 
-  const emaPerc10: number = Math.round(
-    ema(blocksRewardsPerc10, blocksRewardsPerc10.length).at(-1)
-  );
-  const emaPerc20: number = Math.round(
-    ema(blocksRewardsPerc20, blocksRewardsPerc20.length).at(-1)
-  );
-  const emaPerc25: number = Math.round(
-    ema(blocksRewardsPerc25, blocksRewardsPerc25.length).at(-1)
-  );
-  const emaPerc30: number = Math.round(
-    ema(blocksRewardsPerc30, blocksRewardsPerc30.length).at(-1)
-  );
-  const emaPerc40: number = Math.round(
-    ema(blocksRewardsPerc40, blocksRewardsPerc40.length).at(-1)
-  );
-  const emaPerc50: number = Math.round(
-    ema(blocksRewardsPerc50, blocksRewardsPerc50.length).at(-1)
-  );
+  const emaPerc10: number = ema(
+    blocksRewardsPerc10,
+    blocksRewardsPerc10.length
+  ).at(-1);
+  const emaPerc20: number = ema(
+    blocksRewardsPerc20,
+    blocksRewardsPerc20.length
+  ).at(-1);
+  const emaPerc25: number = ema(
+    blocksRewardsPerc25,
+    blocksRewardsPerc25.length
+  ).at(-1);
+  const emaPerc30: number = ema(
+    blocksRewardsPerc30,
+    blocksRewardsPerc30.length
+  ).at(-1);
+  const emaPerc40: number = ema(
+    blocksRewardsPerc40,
+    blocksRewardsPerc40.length
+  ).at(-1);
+  const emaPerc50: number = ema(
+    blocksRewardsPerc50,
+    blocksRewardsPerc50.length
+  ).at(-1);
 
   return {
     confirmationTimeByPriorityFee: {
