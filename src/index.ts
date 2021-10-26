@@ -94,29 +94,29 @@ export const suggestMaxBaseFee = async (
     fromBlock,
     [],
   ]);
-  const baseFee: number[] = [];
+  const baseFees: number[] = [];
   const order = [];
   for (let i = 0; i < feeHistory.baseFeePerGas.length; i++) {
-    baseFee.push(new BigNumber(feeHistory.baseFeePerGas[i]).toNumber());
+    const baseFeePerGas = toGwei(feeHistory.baseFeePerGas[i]);
+    baseFees.push(baseFeePerGas);
     order.push(i);
   }
 
   const blocksArray = Array.from(Array(blockCountHistory + 1).keys());
-  const gweiBaseFees = baseFee.map((wei) => toGwei(wei));
-  const trend = linearRegression(gweiBaseFees, blocksArray);
+  const trend = linearRegression(baseFees, blocksArray);
 
   // If a block is full then the baseFee of the next block is copied. The reason is that in full blocks the minimal tip might not be enough to get included.
   // The last (pending) block is also assumed to end up being full in order to give some upwards bias for urgent suggestions.
-  baseFee[baseFee.length - 1] *= 9 / 8;
+  baseFees[baseFees.length - 1] *= 9 / 8;
   for (let i = feeHistory.gasUsedRatio.length - 1; i >= 0; i--) {
     if (feeHistory.gasUsedRatio[i] > 0.9) {
-      baseFee[i] = baseFee[i + 1];
+      baseFees[i] = baseFees[i + 1];
     }
   }
 
   order.sort((a, b) => {
-    const aa = baseFee[a];
-    const bb = baseFee[b];
+    const aa = baseFees[a];
+    const bb = baseFees[b];
     if (aa < bb) {
       return -1;
     }
@@ -129,7 +129,7 @@ export const suggestMaxBaseFee = async (
   const result = [];
   let maxBaseFee = 0;
   for (let timeFactor = maxTimeFactor; timeFactor >= 0; timeFactor--) {
-    let bf = suggestBaseFee(baseFee, order, timeFactor, sampleMin, sampleMax);
+    let bf = suggestBaseFee(baseFees, order, timeFactor, sampleMin, sampleMax);
     if (bf > maxBaseFee) {
       maxBaseFee = bf;
     } else {
