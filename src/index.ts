@@ -1,4 +1,5 @@
 import { JsonRpcProvider } from '@ethersproject/providers';
+import BigNumber from 'bignumber.js';
 import { ema } from 'moving-averages';
 import {
   FeeHistoryResponse,
@@ -96,7 +97,7 @@ export const suggestMaxBaseFee = async (
   const baseFee: number[] = [];
   const order = [];
   for (let i = 0; i < feeHistory.baseFeePerGas.length; i++) {
-    baseFee.push(Number(feeHistory.baseFeePerGas[i]));
+    baseFee.push(new BigNumber(feeHistory.baseFeePerGas[i]).toNumber());
     order.push(i);
   }
 
@@ -150,7 +151,9 @@ export const suggestMaxPriorityFee = async (
     [10, 20, 25, 30, 40, 50],
   ]);
   const blocksRewards = feeHistory.reward;
-  const blocksRewardsPerc10 = blocksRewards.map((reward) => Number(reward[0]));
+  const blocksRewardsPerc10 = blocksRewards.map((reward) =>
+    new BigNumber(reward[0]).toNumber()
+  );
   const blocksRewardsPerc20 = blocksRewards.map((reward) => Number(reward[1]));
   const blocksRewardsPerc25 = blocksRewards.map((reward) => Number(reward[2]));
   const blocksRewardsPerc30 = blocksRewards.map((reward) => Number(reward[3]));
