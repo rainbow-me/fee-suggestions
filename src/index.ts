@@ -31,20 +31,20 @@ const samplingCurve = (
 
 const linearRegression = (y: number[], x: number[]) => {
   const n = y.length;
-  let sum_x = 0;
-  let sum_y = 0;
-  let sum_xy = 0;
-  let sum_xx = 0;
+  let sumX = 0;
+  let sumY = 0;
+  let sumXY = 0;
+  let sumXX = 0;
 
   for (let i = 0; i < y.length; i++) {
     const cY = Number(y[i]);
     const cX = Number(x[i]);
-    sum_x += cX;
-    sum_y += cY;
-    sum_xy += cX * cY;
-    sum_xx += cX * cX;
+    sumX += cX;
+    sumY += cY;
+    sumXY += cX * cY;
+    sumXX += cX * cX;
   }
-  const slope = (n * sum_xy - sum_x * sum_y) / (n * sum_xx - sum_x * sum_x);
+  const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
 
   return slope;
 };
