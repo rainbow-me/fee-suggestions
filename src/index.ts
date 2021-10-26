@@ -1,20 +1,7 @@
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { ema } from 'moving-averages';
-import BigNumber from 'bignumber.js';
-
-const toGwei = (wei:number) => {
-  return new BigNumber(wei).dividedBy(1000000000).toNumber()
-}
-
-type Reward = string[];
-type GasUsedRatio = number[];
-
-interface FeeHistoryResponse {
-    baseFeePerGas: string[],
-    gasUsedRatio: GasUsedRatio,
-    oldestBlock: number,
-    reward: Reward[],
-}
+import { FeeHistoryResponse, MaxFeeSuggestions, MaxPriorityFeeSuggestions, Suggestions } from "./entities";
+import { toGwei } from "./utils";
 
 // samplingCurve is a helper function for the base fee percentile range calculation.
 const samplingCurve = (
@@ -96,7 +83,7 @@ export const suggestMaxBaseFee = async (
   sampleMin = 0.1,
   sampleMax = 0.3,
   maxTimeFactor = 15,
-) => {
+): Promise<MaxFeeSuggestions> => {
   // feeHistory API call without a reward percentile specified is cheap even with a light client backend because it only needs block headers.
   // Therefore we can afford to fetch a hundred blocks of base fee history in order to make meaningful estimates on variable time scales.
   const feeHistory: FeeHistoryResponse = await provider.send("eth_feeHistory", [blockCountHistory, fromBlock, []]);
@@ -150,7 +137,7 @@ export const suggestMaxBaseFee = async (
 export const suggestMaxPriorityFee = async (
   provider: JsonRpcProvider,
   fromBlock = 'latest',
-) => {
+): Promise<MaxPriorityFeeSuggestions> => {
   const feeHistory: FeeHistoryResponse = await provider.send("eth_feeHistory", [10, fromBlock, [10, 20, 25, 30, 40, 50]]);
   const blocksRewards = feeHistory.reward
   const blocksRewardsPerc10 = blocksRewards.map(reward => Number(reward[0]))
@@ -179,7 +166,7 @@ export const suggestMaxPriorityFee = async (
   }
 }
 
-export const suggestFees = async (provider: JsonRpcProvider) => {
+export const suggestFees = async (provider: JsonRpcProvider): Promise<Suggestions> => {
   const { baseFeeSuggestion, baseFeeTrend } = await suggestMaxBaseFee(provider)
   const { maxPriorityFeeSuggestions, confirmationTimeByPriorityFee } = await suggestMaxPriorityFee(provider)
   return { maxPriorityFeeSuggestions, baseFeeSuggestion, baseFeeTrend, confirmationTimeByPriorityFee }
