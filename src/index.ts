@@ -1,205 +1,12 @@
-import { BigNumber } from "ethers";
-import { JsonRpcProvider } from "@ethersproject/providers";
-
-type Reward = string[];
-type GasUsedRatio = number[];
-
-interface FeeHistoryResponse {
-    baseFeePerGas: string[],
-    gasUsedRatio: GasUsedRatio,
-    oldestBlock: number,
-    reward: Reward[],
-}
-
-
-export const calculateTrend = (data: number[]) => {
-    const increasing: number[] = []
-    const decreasing: number[] = []
-    const equals: number[] = []
-
-  data.map((item, index, array) => {
-      if (index > 0) {
-          const difference = item - array[index - 1];
-
-          if (difference === 0) equals.push(difference);
-          else if (difference > 0) increasing.push(difference);
-          else decreasing.push(difference);
-      }
-
-      return item;
-  });
-
-  if (increasing.length > (decreasing.length + equals.length)) return 1;
-  if (decreasing.length > (increasing.length + equals.length)) return -1;
-  if (equals.length > (increasing.length + decreasing.length)) return 0;
-
-  return 0;
-};
-
-/*
-suggestFees returns a series of maxFeePerGas / maxPriorityFeePerGas values suggested for different time preferences. 
-The first element corresponds to the highest time preference (most urgent transaction).
-The basic idea behind the algorithm is similar to the old "gas price oracle" used in Geth; 
-it takes the prices of recent blocks and makes a suggestion based on a low percentile of those prices. 
-With EIP-1559 though the base fee of each block provides a less noisy and more reliable price signal.
-This allows for more sophisticated suggestions with a variable width (exponentially weighted) base fee time window.
-The window width corresponds to the time preference of the user. The underlying assumption is that price fluctuations over a given past time period indicate the probabilty of similar price levels being re-tested by the market over a similar length future time period.
-*/
-export const suggestFees = async (
-  provider: JsonRpcProvider,
-  blockCountHistory = 100,
-  sampleMin = 0.1,
-  sampleMax = 0.3,
-  maxTimeFactor = 15,
-  extraTipRatio = 0.25,
-  fallbackTip = 2e9
-) => {
-  // feeHistory API call without a reward percentile specified is cheap even with a light client backend because it only needs block headers.
-  // Therefore we can afford to fetch a hundred blocks of base fee history in order to make meaningful estimates on variable time scales.
-  const feeHistory: FeeHistoryResponse = await provider.send("eth_feeHistory", [blockCountHistory, "latest", []]);
-  const baseFee: number[] = [];
-  const order = [];
-  for (let i = 0; i < feeHistory.baseFeePerGas.length; i++) {
-    baseFee.push(Number(feeHistory.baseFeePerGas[i]));
-    order.push(i);
-  }
-
-  const trend = calculateTrend(baseFee)
-
-  // If a block is full then the baseFee of the next block is copied. The reason is that in full blocks the minimal tip might not be enough to get included.
-  // The last (pending) block is also assumed to end up being full in order to give some upwards bias for urgent suggestions.
-  baseFee[baseFee.length - 1] *= 9 / 8;
-  for (let i = feeHistory.gasUsedRatio.length - 1; i >= 0; i--) {
-    if (feeHistory.gasUsedRatio[i] > 0.9) {
-      baseFee[i] = baseFee[i + 1];
-    }
-  }
-
-  order.sort((a, b) => {
-    let aa = baseFee[a];
-    let bb = baseFee[b];
-    if (aa < bb) {
-      return -1;
-    }
-    if (aa > bb) {
-      return 1;
-    }
-    return 0;
-  });
-
-  const tip = await suggestTip(
-    feeHistory.oldestBlock,
-    feeHistory.gasUsedRatio,
-    fallbackTip,
-    provider
-  );
-  const result = [];
-  let maxBaseFee = 0;
-  for (let timeFactor = maxTimeFactor; timeFactor >= 0; timeFactor--) {
-    let bf = suggestBaseFee(baseFee, order, timeFactor, sampleMin, sampleMax);
-    let t = tip;
-    if (bf > maxBaseFee) {
-      maxBaseFee = bf;
-    } else {
-      // If a narrower time window yields a lower base fee suggestion than a wider window then we are probably in a price dip.
-      // In this case getting included with a low tip is not guaranteed; instead we use the higher base fee suggestion
-      // and also offer extra tip to increase the chance of getting included in the base fee dip.
-      t += (maxBaseFee - bf) * extraTipRatio;
-      bf = maxBaseFee;
-    }
-    result[timeFactor] = {
-      maxFeePerGas: Math.round(bf + t),
-      maxPriorityFeePerGas: Math.round(t),
-    };
-  }
-  
-  return {suggestions: result, trend};
-};
-
-// suggestTip suggests a tip (maxPriorityFeePerGas) value that's usually sufficient for blocks that are not full.
-const suggestTip = async (
-  firstBlock: number,
-  gasUsedRatio: GasUsedRatio,
-  fallbackTip: number,
-  provider: JsonRpcProvider
-) => {
-  let ptr = gasUsedRatio.length - 1;
-  let needBlocks = 5;
-  const rewards = [];
-  while (needBlocks > 0 && ptr >= 0) {
-    const blockCount = maxBlockCount(gasUsedRatio, ptr, needBlocks);
-    if (blockCount > 0) {
-      // feeHistory API call with reward percentile specified is expensive and therefore is only requested for a few non-full recent blocks.
-      const feeHistory: FeeHistoryResponse = await provider.send("eth_feeHistory", [
-        blockCount,
-        BigNumber.from(firstBlock).add(ptr).toHexString(),
-        [10],
-      ]);
-      for (let i = 0; i < feeHistory.reward.length; i++) {
-        rewards.push(Number(feeHistory.reward[i][0]));
-      }
-      if (feeHistory.reward.length < blockCount) {
-        break;
-      }
-      needBlocks -= blockCount;
-    }
-    ptr -= blockCount + 1;
-  }
-
-  if (rewards.length == 0) {
-    return fallbackTip;
-  }
-  rewards.sort();
-  return rewards[Math.floor(rewards.length / 2)];
-};
-
-// maxBlockCount returns the number of consecutive blocks suitable for tip suggestion (gasUsedRatio between 0.1 and 0.9).
-const maxBlockCount = (
-  gasUsedRatio: GasUsedRatio,
-  ptr: number,
-  needBlocks: number
-) => {
-  let blockCount = 0;
-  while (needBlocks > 0 && ptr >= 0) {
-    if (gasUsedRatio[ptr] < 0.1 || gasUsedRatio[ptr] > 0.9) {
-      break;
-    }
-    ptr--;
-    needBlocks--;
-    blockCount++;
-  }
-  return blockCount;
-};
-
-// suggestBaseFee calculates an average of base fees in the sampleMin to sampleMax percentile range of recent base fee history, each block weighted with an exponential time function based on timeFactor.
-const suggestBaseFee = (
-  baseFee: string | any[],
-  order: string | any[],
-  timeFactor: number,
-  sampleMin: number,
-  sampleMax: number
-) => {
-  if (timeFactor < 1e-6) {
-    return baseFee[baseFee.length - 1];
-  }
-  const pendingWeight =
-    (1 - Math.exp(-1 / timeFactor)) /
-    (1 - Math.exp(-baseFee.length / timeFactor));
-  let sumWeight = 0;
-  let result = 0;
-  let samplingCurveLast = 0;
-  for (let i = 0; i < order.length; i++) {
-    sumWeight +=
-      pendingWeight * Math.exp((order[i] - baseFee.length + 1) / timeFactor);
-    const samplingCurveValue = samplingCurve(sumWeight, sampleMin, sampleMax);
-    result += (samplingCurveValue - samplingCurveLast) * baseFee[order[i]];
-    if (samplingCurveValue >= 1) {
-      return result;
-    }
-    samplingCurveLast = samplingCurveValue;
-  }
-  return result;
-};
+import { JsonRpcProvider } from '@ethersproject/providers';
+import { ema } from 'moving-averages';
+import {
+  FeeHistoryResponse,
+  MaxFeeSuggestions,
+  MaxPriorityFeeSuggestions,
+  Suggestions,
+} from './entities';
+import { toGwei } from './utils';
 
 // samplingCurve is a helper function for the base fee percentile range calculation.
 const samplingCurve = (
@@ -220,4 +27,186 @@ const samplingCurve = (
       )) /
     2
   );
+};
+
+const linearRegression = (y: number[], x: number[]) => {
+  const n = y.length;
+  let sumX = 0;
+  let sumY = 0;
+  let sumXY = 0;
+  let sumXX = 0;
+
+  for (let i = 0; i < y.length; i++) {
+    const cY = Number(y[i]);
+    const cX = Number(x[i]);
+    sumX += cX;
+    sumY += cY;
+    sumXY += cX * cY;
+    sumXX += cX * cX;
+  }
+  const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+
+  return slope;
+};
+
+const suggestBaseFee = (
+  baseFee: number[],
+  order: number[],
+  timeFactor: number,
+  sampleMin: number,
+  sampleMax: number
+) => {
+  if (timeFactor < 1e-6) {
+    return baseFee[baseFee.length - 1];
+  }
+  const pendingWeight =
+    (1 - Math.exp(-1 / timeFactor)) /
+    (1 - Math.exp(-baseFee.length / timeFactor));
+  let sumWeight = 0;
+  let result = 0;
+  let samplingCurveLast = 0;
+  for (let or of order) {
+    sumWeight +=
+      pendingWeight * Math.exp((or - baseFee.length + 1) / timeFactor);
+    const samplingCurveValue = samplingCurve(sumWeight, sampleMin, sampleMax);
+    result += (samplingCurveValue - samplingCurveLast) * baseFee[or];
+    if (samplingCurveValue >= 1) {
+      return result;
+    }
+    samplingCurveLast = samplingCurveValue;
+  }
+  return result;
+};
+
+export const suggestMaxBaseFee = async (
+  provider: JsonRpcProvider,
+  fromBlock = 'latest',
+  blockCountHistory = 100,
+  sampleMin = 0.1,
+  sampleMax = 0.3,
+  maxTimeFactor = 15
+): Promise<MaxFeeSuggestions> => {
+  // feeHistory API call without a reward percentile specified is cheap even with a light client backend because it only needs block headers.
+  // Therefore we can afford to fetch a hundred blocks of base fee history in order to make meaningful estimates on variable time scales.
+  const feeHistory: FeeHistoryResponse = await provider.send('eth_feeHistory', [
+    blockCountHistory,
+    fromBlock,
+    [],
+  ]);
+  const baseFees: number[] = [];
+  const order = [];
+  for (let i = 0; i < feeHistory.baseFeePerGas.length; i++) {
+    baseFees.push(toGwei(feeHistory.baseFeePerGas[i]));
+    order.push(i);
+  }
+
+  const blocksArray = Array.from(Array(blockCountHistory + 1).keys());
+  const trend = linearRegression(baseFees, blocksArray);
+
+  // If a block is full then the baseFee of the next block is copied. The reason is that in full blocks the minimal tip might not be enough to get included.
+  // The last (pending) block is also assumed to end up being full in order to give some upwards bias for urgent suggestions.
+  baseFees[baseFees.length - 1] *= 9 / 8;
+  for (let i = feeHistory.gasUsedRatio.length - 1; i >= 0; i--) {
+    if (feeHistory.gasUsedRatio[i] > 0.9) {
+      baseFees[i] = baseFees[i + 1];
+    }
+  }
+
+  order.sort((a, b) => {
+    const aa = baseFees[a];
+    const bb = baseFees[b];
+    if (aa < bb) {
+      return -1;
+    }
+    if (aa > bb) {
+      return 1;
+    }
+    return 0;
+  });
+
+  const result = [];
+  let maxBaseFee = 0;
+  for (let timeFactor = maxTimeFactor; timeFactor >= 0; timeFactor--) {
+    let bf = suggestBaseFee(baseFees, order, timeFactor, sampleMin, sampleMax);
+    if (bf > maxBaseFee) {
+      maxBaseFee = bf;
+    } else {
+      bf = maxBaseFee;
+    }
+    result[timeFactor] = bf;
+  }
+
+  return { baseFeeSuggestion: Math.max(...result), baseFeeTrend: trend };
+};
+
+export const suggestMaxPriorityFee = async (
+  provider: JsonRpcProvider,
+  fromBlock = 'latest'
+): Promise<MaxPriorityFeeSuggestions> => {
+  const feeHistory: FeeHistoryResponse = await provider.send('eth_feeHistory', [
+    10,
+    fromBlock,
+    [10, 20, 25, 30, 40, 50],
+  ]);
+  const blocksRewards = feeHistory.reward;
+  const blocksRewardsPerc10 = blocksRewards.map((reward) => toGwei(reward[0]));
+  const blocksRewardsPerc20 = blocksRewards.map((reward) => toGwei(reward[1]));
+  const blocksRewardsPerc25 = blocksRewards.map((reward) => toGwei(reward[2]));
+  const blocksRewardsPerc30 = blocksRewards.map((reward) => toGwei(reward[3]));
+  const blocksRewardsPerc40 = blocksRewards.map((reward) => toGwei(reward[4]));
+  const blocksRewardsPerc50 = blocksRewards.map((reward) => toGwei(reward[5]));
+
+  const emaPerc10: number = ema(
+    blocksRewardsPerc10,
+    blocksRewardsPerc10.length
+  ).at(-1);
+  const emaPerc20: number = ema(
+    blocksRewardsPerc20,
+    blocksRewardsPerc20.length
+  ).at(-1);
+  const emaPerc25: number = ema(
+    blocksRewardsPerc25,
+    blocksRewardsPerc25.length
+  ).at(-1);
+  const emaPerc30: number = ema(
+    blocksRewardsPerc30,
+    blocksRewardsPerc30.length
+  ).at(-1);
+  const emaPerc40: number = ema(
+    blocksRewardsPerc40,
+    blocksRewardsPerc40.length
+  ).at(-1);
+  const emaPerc50: number = ema(
+    blocksRewardsPerc50,
+    blocksRewardsPerc50.length
+  ).at(-1);
+
+  return {
+    confirmationTimeByPriorityFee: {
+      15: emaPerc50,
+      30: emaPerc40,
+      45: emaPerc30,
+      60: emaPerc25,
+      75: emaPerc10,
+    },
+    maxPriorityFeeSuggestions: {
+      fast: emaPerc30,
+      normal: emaPerc20,
+      urgent: emaPerc40,
+    },
+  };
+};
+
+export const suggestFees = async (
+  provider: JsonRpcProvider
+): Promise<Suggestions> => {
+  const { baseFeeSuggestion, baseFeeTrend } = await suggestMaxBaseFee(provider);
+  const { maxPriorityFeeSuggestions, confirmationTimeByPriorityFee } =
+    await suggestMaxPriorityFee(provider);
+  return {
+    baseFeeSuggestion,
+    baseFeeTrend,
+    confirmationTimeByPriorityFee,
+    maxPriorityFeeSuggestions,
+  };
 };
