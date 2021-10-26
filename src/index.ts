@@ -25,13 +25,11 @@ const samplingCurve = (
 };
 
 const  linearRegression = (y: number[],x: number[]) => {
-  let lr = {};
-  let n = y.length;
+  const n = y.length;
   let sum_x = 0;
   let sum_y = 0;
   let sum_xy = 0;
   let sum_xx = 0;
-  let sum_yy = 0;
 
   for (let i = 0; i < y.length; i++) {
       const cY = Number(y[i])
@@ -40,7 +38,6 @@ const  linearRegression = (y: number[],x: number[]) => {
       sum_y += cY;
       sum_xy += (cX*cY);
       sum_xx += (cX*cX);
-      sum_yy += (cY*cY);
   } 
   const slope = (n * sum_xy - sum_x * sum_y) / (n*sum_xx - sum_x * sum_x);
 
@@ -48,8 +45,8 @@ const  linearRegression = (y: number[],x: number[]) => {
 }
 
 const suggestBaseFee = (
-  baseFee: string | any[],
-  order: string | any[],
+  baseFee:  number[],
+  order: number[],
   timeFactor: number,
   sampleMin: number,
   sampleMax: number
@@ -108,8 +105,8 @@ export const suggestMaxBaseFee = async (
   }
 
   order.sort((a, b) => {
-    let aa = baseFee[a];
-    let bb = baseFee[b];
+    const aa = baseFee[a];
+    const bb = baseFee[b];
     if (aa < bb) {
       return -1;
     }

@@ -24,7 +24,10 @@
   "scripts": {
     "start": "ts-node demo.ts",
     "build": "tsc src/index.ts --outDir dist",
-    "publish": "yarn publish ./"
+    "publish": "yarn publish ./",
+    "lint": "yarn lint:ts && yarn lint:js",
+    "lint:js": "eslint --cache --ext '.ts,.tsx,.js,.jsx' .",
+    "lint:ts": "yarn tsc --skipLibCheck --noEmit"
   },
   "prepublish": "yarn build",
   "dependencies": {
@@ -34,6 +37,11 @@
   },
   "devDependencies": {
     "@types/node": "^16.11.1",
+    "@typescript-eslint/eslint-plugin": "^5.2.0",
+    "@typescript-eslint/parser": "^5.2.0",
+    "eslint": "^8.1.0",
+    "eslint-config-rainbow": "^2.0.1",
+    "eslint-plugin-jest": "^25.2.2",
     "nodemon": "^2.0.12",
     "prettier": "^2.3.2",
     "ts-node": "^10.1.0",
