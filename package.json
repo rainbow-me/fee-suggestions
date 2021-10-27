@@ -23,7 +23,7 @@
   },
   "scripts": {
     "start": "ts-node demo.ts",
-    "build": "tsc src/index.ts --outDir dist",
+    "build": "yarn tsc",
     "publish": "yarn publish ./",
     "lint": "yarn lint:ts && yarn lint:js",
     "lint:js": "eslint --cache --ext '.ts,.tsx,.js,.jsx' .",
