@@ -6,7 +6,7 @@ import {
   MaxPriorityFeeSuggestions,
   Suggestions,
 } from './entities';
-import { gweiToWei, weiToGwei, weiToGweiNumber } from './utils';
+import { gweiToWei, weiToGweiNumber } from './utils';
 
 // samplingCurve is a helper function for the base fee percentile range calculation.
 const samplingCurve = (
