@@ -9,18 +9,18 @@ export interface FeeHistoryResponse {
 }
 
 export interface MaxFeeSuggestions {
-  baseFeeSuggestion: number;
+  baseFeeSuggestion: string;
   baseFeeTrend: number;
 }
 
 export interface MaxPriorityFeeSuggestions {
-  maxPriorityFeeSuggestions: { urgent: number; fast: number; normal: number };
+  maxPriorityFeeSuggestions: { urgent: string; fast: string; normal: string };
   confirmationTimeByPriorityFee: {
-    15: number;
-    30: number;
-    45: number;
-    60: number;
-    75: number;
+    15: string;
+    30: string;
+    45: string;
+    60: string;
+    75: string;
   };
 }
 

@@ -6,7 +6,7 @@ import {
   MaxPriorityFeeSuggestions,
   Suggestions,
 } from './entities';
-import { toGwei } from './utils';
+import { gweiToWei, weiToGwei, weiToGweiNumber } from './utils';
 
 // samplingCurve is a helper function for the base fee percentile range calculation.
 const samplingCurve = (
@@ -96,7 +96,7 @@ export const suggestMaxBaseFee = async (
   const baseFees: number[] = [];
   const order = [];
   for (let i = 0; i < feeHistory.baseFeePerGas.length; i++) {
-    baseFees.push(toGwei(feeHistory.baseFeePerGas[i]));
+    baseFees.push(weiToGweiNumber(feeHistory.baseFeePerGas[i]));
     order.push(i);
   }
 
@@ -136,7 +136,12 @@ export const suggestMaxBaseFee = async (
     result[timeFactor] = bf;
   }
 
-  return { baseFeeSuggestion: Math.max(...result), baseFeeTrend: trend };
+  const suggestedMaxBaseFee = Math.max(...result);
+
+  return {
+    baseFeeSuggestion: gweiToWei(suggestedMaxBaseFee),
+    baseFeeTrend: trend,
+  };
 };
 
 export const suggestMaxPriorityFee = async (
@@ -149,12 +154,24 @@ export const suggestMaxPriorityFee = async (
     [10, 20, 25, 30, 40, 50],
   ]);
   const blocksRewards = feeHistory.reward;
-  const blocksRewardsPerc10 = blocksRewards.map((reward) => toGwei(reward[0]));
-  const blocksRewardsPerc20 = blocksRewards.map((reward) => toGwei(reward[1]));
-  const blocksRewardsPerc25 = blocksRewards.map((reward) => toGwei(reward[2]));
-  const blocksRewardsPerc30 = blocksRewards.map((reward) => toGwei(reward[3]));
-  const blocksRewardsPerc40 = blocksRewards.map((reward) => toGwei(reward[4]));
-  const blocksRewardsPerc50 = blocksRewards.map((reward) => toGwei(reward[5]));
+  const blocksRewardsPerc10 = blocksRewards.map((reward) =>
+    weiToGwei(reward[0])
+  );
+  const blocksRewardsPerc20 = blocksRewards.map((reward) =>
+    weiToGwei(reward[1])
+  );
+  const blocksRewardsPerc25 = blocksRewards.map((reward) =>
+    weiToGwei(reward[2])
+  );
+  const blocksRewardsPerc30 = blocksRewards.map((reward) =>
+    weiToGwei(reward[3])
+  );
+  const blocksRewardsPerc40 = blocksRewards.map((reward) =>
+    weiToGwei(reward[4])
+  );
+  const blocksRewardsPerc50 = blocksRewards.map((reward) =>
+    weiToGwei(reward[5])
+  );
 
   const emaPerc10: number = ema(
     blocksRewardsPerc10,
@@ -183,16 +200,16 @@ export const suggestMaxPriorityFee = async (
 
   return {
     confirmationTimeByPriorityFee: {
-      15: emaPerc50,
-      30: emaPerc40,
-      45: emaPerc30,
-      60: emaPerc25,
-      75: emaPerc10,
+      15: gweiToWei(emaPerc50),
+      30: gweiToWei(emaPerc40),
+      45: gweiToWei(emaPerc30),
+      60: gweiToWei(emaPerc25),
+      75: gweiToWei(emaPerc10),
     },
     maxPriorityFeeSuggestions: {
-      fast: emaPerc30,
-      normal: emaPerc20,
-      urgent: emaPerc40,
+      fast: gweiToWei(emaPerc30),
+      normal: gweiToWei(emaPerc20),
+      urgent: gweiToWei(emaPerc40),
     },
   };
 };
