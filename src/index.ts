@@ -6,7 +6,7 @@ import {
   MaxPriorityFeeSuggestions,
   Suggestions,
 } from './entities';
-import { toGwei } from './utils';
+import { gweiToWei, weiToGweiNumber } from './utils';
 
 // samplingCurve is a helper function for the base fee percentile range calculation.
 const samplingCurve = (
@@ -96,7 +96,7 @@ export const suggestMaxBaseFee = async (
   const baseFees: number[] = [];
   const order = [];
   for (let i = 0; i < feeHistory.baseFeePerGas.length; i++) {
-    baseFees.push(toGwei(feeHistory.baseFeePerGas[i]));
+    baseFees.push(weiToGweiNumber(feeHistory.baseFeePerGas[i]));
     order.push(i);
   }
 
@@ -135,8 +135,12 @@ export const suggestMaxBaseFee = async (
     }
     result[timeFactor] = bf;
   }
+  const suggestedMaxBaseFee = Math.max(...result);
 
-  return { baseFeeSuggestion: Math.max(...result), baseFeeTrend: trend };
+  return {
+    baseFeeSuggestion: gweiToWei(suggestedMaxBaseFee),
+    baseFeeTrend: trend,
+  };
 };
 
 export const suggestMaxPriorityFee = async (
@@ -149,50 +153,57 @@ export const suggestMaxPriorityFee = async (
     [10, 20, 25, 30, 40, 50],
   ]);
   const blocksRewards = feeHistory.reward;
-  const blocksRewardsPerc10 = blocksRewards.map((reward) => toGwei(reward[0]));
-  const blocksRewardsPerc20 = blocksRewards.map((reward) => toGwei(reward[1]));
-  const blocksRewardsPerc25 = blocksRewards.map((reward) => toGwei(reward[2]));
-  const blocksRewardsPerc30 = blocksRewards.map((reward) => toGwei(reward[3]));
-  const blocksRewardsPerc40 = blocksRewards.map((reward) => toGwei(reward[4]));
-  const blocksRewardsPerc50 = blocksRewards.map((reward) => toGwei(reward[5]));
 
-  const emaPerc10: number = ema(
-    blocksRewardsPerc10,
-    blocksRewardsPerc10.length
-  ).at(-1);
-  const emaPerc20: number = ema(
-    blocksRewardsPerc20,
-    blocksRewardsPerc20.length
-  ).at(-1);
-  const emaPerc25: number = ema(
-    blocksRewardsPerc25,
-    blocksRewardsPerc25.length
-  ).at(-1);
-  const emaPerc30: number = ema(
-    blocksRewardsPerc30,
-    blocksRewardsPerc30.length
-  ).at(-1);
-  const emaPerc40: number = ema(
-    blocksRewardsPerc40,
-    blocksRewardsPerc40.length
-  ).at(-1);
-  const emaPerc50: number = ema(
-    blocksRewardsPerc50,
-    blocksRewardsPerc50.length
-  ).at(-1);
+  if (!blocksRewards.length) throw new Error('Error: block reward was empty');
+
+  const blocksRewardsPerc10 = blocksRewards.map((reward) =>
+    weiToGweiNumber(reward[0])
+  );
+  const blocksRewardsPerc20 = blocksRewards.map((reward) =>
+    weiToGweiNumber(reward[1])
+  );
+  const blocksRewardsPerc25 = blocksRewards.map((reward) =>
+    weiToGweiNumber(reward[2])
+  );
+  const blocksRewardsPerc30 = blocksRewards.map((reward) =>
+    weiToGweiNumber(reward[3])
+  );
+  const blocksRewardsPerc40 = blocksRewards.map((reward) =>
+    weiToGweiNumber(reward[4])
+  );
+  const blocksRewardsPerc50 = blocksRewards.map((reward) =>
+    weiToGweiNumber(reward[5])
+  );
+
+  const emaPerc10 = ema(blocksRewardsPerc10, blocksRewardsPerc10.length).at(-1);
+  const emaPerc20 = ema(blocksRewardsPerc20, blocksRewardsPerc20.length).at(-1);
+  const emaPerc25 = ema(blocksRewardsPerc25, blocksRewardsPerc25.length).at(-1);
+  const emaPerc30 = ema(blocksRewardsPerc30, blocksRewardsPerc30.length).at(-1);
+  const emaPerc40 = ema(blocksRewardsPerc40, blocksRewardsPerc40.length).at(-1);
+  const emaPerc50 = ema(blocksRewardsPerc50, blocksRewardsPerc50.length).at(-1);
+
+  if (
+    emaPerc10 === undefined ||
+    emaPerc20 === undefined ||
+    emaPerc25 === undefined ||
+    emaPerc30 === undefined ||
+    emaPerc40 === undefined ||
+    emaPerc50 === undefined
+  )
+    throw new Error('Error: ema was empty');
 
   return {
     confirmationTimeByPriorityFee: {
-      15: emaPerc50,
-      30: emaPerc40,
-      45: emaPerc30,
-      60: emaPerc25,
-      75: emaPerc10,
+      15: gweiToWei(emaPerc50),
+      30: gweiToWei(emaPerc40),
+      45: gweiToWei(emaPerc30),
+      60: gweiToWei(emaPerc25),
+      75: gweiToWei(emaPerc10),
     },
     maxPriorityFeeSuggestions: {
-      fast: emaPerc30,
-      normal: emaPerc20,
-      urgent: emaPerc40,
+      fast: gweiToWei(emaPerc30),
+      normal: gweiToWei(emaPerc20),
+      urgent: gweiToWei(emaPerc40),
     },
   };
 };
