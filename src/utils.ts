@@ -20,7 +20,7 @@ export const divide = (
 };
 
 export const gweiToWei = (gweiAmount: BigNumberish) => {
-  const weiAmount = multiply(gweiAmount, ethUnits.gwei).toFixed();
+  const weiAmount = multiply(gweiAmount, ethUnits.gwei).toFixed(0);
   return weiAmount;
 };
 
