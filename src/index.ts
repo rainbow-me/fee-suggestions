@@ -135,7 +135,6 @@ export const suggestMaxBaseFee = async (
     }
     result[timeFactor] = bf;
   }
-
   const suggestedMaxBaseFee = Math.max(...result);
 
   return {
@@ -154,6 +153,9 @@ export const suggestMaxPriorityFee = async (
     [10, 20, 25, 30, 40, 50],
   ]);
   const blocksRewards = feeHistory.reward;
+
+  if (!blocksRewards.length) throw new Error('Error: block reward was empty');
+
   const blocksRewardsPerc10 = blocksRewards.map((reward) =>
     weiToGweiNumber(reward[0])
   );
@@ -173,30 +175,22 @@ export const suggestMaxPriorityFee = async (
     weiToGweiNumber(reward[5])
   );
 
-  const emaPerc10: number = ema(
-    blocksRewardsPerc10,
-    blocksRewardsPerc10.length
-  ).at(-1);
-  const emaPerc20: number = ema(
-    blocksRewardsPerc20,
-    blocksRewardsPerc20.length
-  ).at(-1);
-  const emaPerc25: number = ema(
-    blocksRewardsPerc25,
-    blocksRewardsPerc25.length
-  ).at(-1);
-  const emaPerc30: number = ema(
-    blocksRewardsPerc30,
-    blocksRewardsPerc30.length
-  ).at(-1);
-  const emaPerc40: number = ema(
-    blocksRewardsPerc40,
-    blocksRewardsPerc40.length
-  ).at(-1);
-  const emaPerc50: number = ema(
-    blocksRewardsPerc50,
-    blocksRewardsPerc50.length
-  ).at(-1);
+  const emaPerc10 = ema(blocksRewardsPerc10, blocksRewardsPerc10.length).at(-1);
+  const emaPerc20 = ema(blocksRewardsPerc20, blocksRewardsPerc20.length).at(-1);
+  const emaPerc25 = ema(blocksRewardsPerc25, blocksRewardsPerc25.length).at(-1);
+  const emaPerc30 = ema(blocksRewardsPerc30, blocksRewardsPerc30.length).at(-1);
+  const emaPerc40 = ema(blocksRewardsPerc40, blocksRewardsPerc40.length).at(-1);
+  const emaPerc50 = ema(blocksRewardsPerc50, blocksRewardsPerc50.length).at(-1);
+
+  if (
+    emaPerc10 === undefined ||
+    emaPerc20 === undefined ||
+    emaPerc25 === undefined ||
+    emaPerc30 === undefined ||
+    emaPerc40 === undefined ||
+    emaPerc50 === undefined
+  )
+    throw new Error('Error: ema was empty');
 
   return {
     confirmationTimeByPriorityFee: {
