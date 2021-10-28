@@ -155,22 +155,22 @@ export const suggestMaxPriorityFee = async (
   ]);
   const blocksRewards = feeHistory.reward;
   const blocksRewardsPerc10 = blocksRewards.map((reward) =>
-    weiToGwei(reward[0])
+    weiToGweiNumber(reward[0])
   );
   const blocksRewardsPerc20 = blocksRewards.map((reward) =>
-    weiToGwei(reward[1])
+    weiToGweiNumber(reward[1])
   );
   const blocksRewardsPerc25 = blocksRewards.map((reward) =>
-    weiToGwei(reward[2])
+    weiToGweiNumber(reward[2])
   );
   const blocksRewardsPerc30 = blocksRewards.map((reward) =>
-    weiToGwei(reward[3])
+    weiToGweiNumber(reward[3])
   );
   const blocksRewardsPerc40 = blocksRewards.map((reward) =>
-    weiToGwei(reward[4])
+    weiToGweiNumber(reward[4])
   );
   const blocksRewardsPerc50 = blocksRewards.map((reward) =>
-    weiToGwei(reward[5])
+    weiToGweiNumber(reward[5])
   );
 
   const emaPerc10: number = ema(
