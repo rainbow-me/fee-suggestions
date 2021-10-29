@@ -1,5 +1,5 @@
 {
-  "name": "eip1559-fee-suggestions-ethers",
+  "name": "@rainbow-me/fee-suggestions",
   "description": "JavaScript library that suggest fees on Ethereum after EIP-1559 using historical data using ethers.js",
   "version": "1.3.3",
   "main": "dist/index.js",
