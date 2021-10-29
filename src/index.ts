@@ -116,7 +116,7 @@ export const suggestMaxPriorityFee = async (
     maxPriorityFeeSuggestions: {
       fast: gweiToWei(Math.max(emaPerc30, 1.5)),
       normal: gweiToWei(Math.max(emaPerc15, 1)),
-      urgent: gweiToWei(emaPerc45),
+      urgent: gweiToWei(Math.max(emaPerc45, 2)),
     },
   };
 };
