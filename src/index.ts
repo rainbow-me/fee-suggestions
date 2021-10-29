@@ -4,6 +4,7 @@ import {
   FeeHistoryResponse,
   MaxFeeSuggestions,
   MaxPriorityFeeSuggestions,
+  Reward,
   Suggestions,
 } from './entities';
 import { gweiToWei, weiToGweiNumber } from './utils';
@@ -143,6 +144,11 @@ export const suggestMaxBaseFee = async (
   };
 };
 
+const rewardsFilterOutliers = (blocksRewards: Reward[], index: number) =>
+  blocksRewards
+    .map((reward) => weiToGweiNumber(reward[index]))
+    .filter((gweiReward) => gweiReward <= 10);
+
 export const suggestMaxPriorityFee = async (
   provider: JsonRpcProvider,
   fromBlock = 'latest'
@@ -156,24 +162,12 @@ export const suggestMaxPriorityFee = async (
 
   if (!blocksRewards.length) throw new Error('Error: block reward was empty');
 
-  const blocksRewardsPerc10 = blocksRewards.map((reward) =>
-    weiToGweiNumber(reward[0])
-  );
-  const blocksRewardsPerc20 = blocksRewards.map((reward) =>
-    weiToGweiNumber(reward[1])
-  );
-  const blocksRewardsPerc25 = blocksRewards.map((reward) =>
-    weiToGweiNumber(reward[2])
-  );
-  const blocksRewardsPerc30 = blocksRewards.map((reward) =>
-    weiToGweiNumber(reward[3])
-  );
-  const blocksRewardsPerc40 = blocksRewards.map((reward) =>
-    weiToGweiNumber(reward[4])
-  );
-  const blocksRewardsPerc50 = blocksRewards.map((reward) =>
-    weiToGweiNumber(reward[5])
-  );
+  const blocksRewardsPerc10 = rewardsFilterOutliers(blocksRewards, 0);
+  const blocksRewardsPerc20 = rewardsFilterOutliers(blocksRewards, 1);
+  const blocksRewardsPerc25 = rewardsFilterOutliers(blocksRewards, 2);
+  const blocksRewardsPerc30 = rewardsFilterOutliers(blocksRewards, 3);
+  const blocksRewardsPerc40 = rewardsFilterOutliers(blocksRewards, 4);
+  const blocksRewardsPerc50 = rewardsFilterOutliers(blocksRewards, 5);
 
   const emaPerc10 = ema(blocksRewardsPerc10, blocksRewardsPerc10.length).at(-1);
   const emaPerc20 = ema(blocksRewardsPerc20, blocksRewardsPerc20.length).at(-1);
@@ -190,7 +184,7 @@ export const suggestMaxPriorityFee = async (
     emaPerc40 === undefined ||
     emaPerc50 === undefined
   )
-    throw new Error('Error: ema was empty');
+    throw new Error('Error: ema was undefined');
 
   return {
     confirmationTimeByPriorityFee: {
