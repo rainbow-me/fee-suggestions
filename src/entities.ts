@@ -20,7 +20,6 @@ export interface MaxPriorityFeeSuggestions {
     30: string;
     45: string;
     60: string;
-    75: string;
   };
 }
 
