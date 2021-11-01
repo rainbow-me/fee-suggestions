@@ -7,6 +7,7 @@ import {
   Suggestions,
 } from './entities';
 import {
+  getOutlierBlocksToRemove,
   gweiToWei,
   linearRegression,
   rewardsFilterOutliers,
@@ -94,10 +95,28 @@ export const suggestMaxPriorityFee = async (
 
   if (!blocksRewards.length) throw new Error('Error: block reward was empty');
 
-  const blocksRewardsPerc10 = rewardsFilterOutliers(blocksRewards, 0);
-  const blocksRewardsPerc15 = rewardsFilterOutliers(blocksRewards, 1);
-  const blocksRewardsPerc30 = rewardsFilterOutliers(blocksRewards, 2);
-  const blocksRewardsPerc45 = rewardsFilterOutliers(blocksRewards, 3);
+  const outlierBlocks = getOutlierBlocksToRemove(blocksRewards, 0);
+
+  const blocksRewardsPerc10 = rewardsFilterOutliers(
+    blocksRewards,
+    outlierBlocks,
+    0
+  );
+  const blocksRewardsPerc15 = rewardsFilterOutliers(
+    blocksRewards,
+    outlierBlocks,
+    1
+  );
+  const blocksRewardsPerc30 = rewardsFilterOutliers(
+    blocksRewards,
+    outlierBlocks,
+    2
+  );
+  const blocksRewardsPerc45 = rewardsFilterOutliers(
+    blocksRewards,
+    outlierBlocks,
+    3
+  );
 
   const emaPerc10 = ema(blocksRewardsPerc10, blocksRewardsPerc10.length).at(-1);
   const emaPerc15 = ema(blocksRewardsPerc15, blocksRewardsPerc15.length).at(-1);
