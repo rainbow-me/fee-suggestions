@@ -35,6 +35,10 @@ export const weiToGweiNumber = (weiAmount: BigNumberish) => {
   return gweiAmount;
 };
 
+export const weiToString = (weiAmount: BigNumberish) => {
+  return new BigNumber(weiAmount).toString();
+};
+
 export const samplingCurve = (
   sumWeight: number,
   sampleMin: number,

@@ -12,6 +12,7 @@ import {
   rewardsFilterOutliers,
   suggestBaseFee,
   weiToGweiNumber,
+  weiToString,
 } from './utils';
 
 export const suggestMaxBaseFee = async (
@@ -27,6 +28,10 @@ export const suggestMaxBaseFee = async (
     fromBlock,
     [],
   ]);
+  const currentBaseFee = weiToString(
+    feeHistory?.baseFeePerGas[feeHistory?.baseFeePerGas.length - 1]
+  );
+
   const baseFees: number[] = [];
   const order = [];
   for (let i = 0; i < feeHistory.baseFeePerGas.length; i++) {
@@ -72,6 +77,7 @@ export const suggestMaxBaseFee = async (
   return {
     baseFeeSuggestion: gweiToWei(suggestedMaxBaseFee),
     baseFeeTrend: trend,
+    currentBaseFee,
   };
 };
 
@@ -124,13 +130,15 @@ export const suggestMaxPriorityFee = async (
 export const suggestFees = async (
   provider: JsonRpcProvider
 ): Promise<Suggestions> => {
-  const { baseFeeSuggestion, baseFeeTrend } = await suggestMaxBaseFee(provider);
+  const { baseFeeSuggestion, baseFeeTrend, currentBaseFee } =
+    await suggestMaxBaseFee(provider);
   const { maxPriorityFeeSuggestions, confirmationTimeByPriorityFee } =
     await suggestMaxPriorityFee(provider);
   return {
     baseFeeSuggestion,
     baseFeeTrend,
     confirmationTimeByPriorityFee,
+    currentBaseFee,
     maxPriorityFeeSuggestions,
   };
 };
