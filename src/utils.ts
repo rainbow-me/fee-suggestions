@@ -35,6 +35,10 @@ export const weiToGweiNumber = (weiAmount: BigNumberish) => {
   return gweiAmount;
 };
 
+export const weiToString = (weiAmount: BigNumberish) => {
+  return new BigNumber(weiAmount).toString();
+};
+
 export const samplingCurve = (
   sumWeight: number,
   sampleMin: number,
@@ -104,7 +108,26 @@ export const suggestBaseFee = (
   return result;
 };
 
-export const rewardsFilterOutliers = (blocksRewards: Reward[], index: number) =>
+export const getOutlierBlocksToRemove = (
+  blocksRewards: Reward[],
+  index: number
+) => {
+  const blocks: number[] = [];
   blocksRewards
     .map((reward) => weiToGweiNumber(reward[index]))
-    .filter((gweiReward) => gweiReward <= 10);
+    .forEach((gweiReward, i) => {
+      if (gweiReward > 5) {
+        blocks.push(i);
+      }
+    });
+  return blocks;
+};
+
+export const rewardsFilterOutliers = (
+  blocksRewards: Reward[],
+  outlierBlocks: number[],
+  rewardIndex: number
+) =>
+  blocksRewards
+    .filter((_, index) => !outlierBlocks.includes(index))
+    .map((reward) => weiToGweiNumber(reward[rewardIndex]));

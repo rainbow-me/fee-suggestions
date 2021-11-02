@@ -7,11 +7,13 @@ import {
   Suggestions,
 } from './entities';
 import {
+  getOutlierBlocksToRemove,
   gweiToWei,
   linearRegression,
   rewardsFilterOutliers,
   suggestBaseFee,
   weiToGweiNumber,
+  weiToString,
 } from './utils';
 
 export const suggestMaxBaseFee = async (
@@ -27,6 +29,10 @@ export const suggestMaxBaseFee = async (
     fromBlock,
     [],
   ]);
+  const currentBaseFee = weiToString(
+    feeHistory?.baseFeePerGas[feeHistory?.baseFeePerGas.length - 1]
+  );
+
   const baseFees: number[] = [];
   const order = [];
   for (let i = 0; i < feeHistory.baseFeePerGas.length; i++) {
@@ -72,6 +78,7 @@ export const suggestMaxBaseFee = async (
   return {
     baseFeeSuggestion: gweiToWei(suggestedMaxBaseFee),
     baseFeeTrend: trend,
+    currentBaseFee,
   };
 };
 
@@ -88,10 +95,28 @@ export const suggestMaxPriorityFee = async (
 
   if (!blocksRewards.length) throw new Error('Error: block reward was empty');
 
-  const blocksRewardsPerc10 = rewardsFilterOutliers(blocksRewards, 0);
-  const blocksRewardsPerc15 = rewardsFilterOutliers(blocksRewards, 1);
-  const blocksRewardsPerc30 = rewardsFilterOutliers(blocksRewards, 2);
-  const blocksRewardsPerc45 = rewardsFilterOutliers(blocksRewards, 3);
+  const outlierBlocks = getOutlierBlocksToRemove(blocksRewards, 0);
+
+  const blocksRewardsPerc10 = rewardsFilterOutliers(
+    blocksRewards,
+    outlierBlocks,
+    0
+  );
+  const blocksRewardsPerc15 = rewardsFilterOutliers(
+    blocksRewards,
+    outlierBlocks,
+    1
+  );
+  const blocksRewardsPerc30 = rewardsFilterOutliers(
+    blocksRewards,
+    outlierBlocks,
+    2
+  );
+  const blocksRewardsPerc45 = rewardsFilterOutliers(
+    blocksRewards,
+    outlierBlocks,
+    3
+  );
 
   const emaPerc10 = ema(blocksRewardsPerc10, blocksRewardsPerc10.length).at(-1);
   const emaPerc15 = ema(blocksRewardsPerc15, blocksRewardsPerc15.length).at(-1);
@@ -124,13 +149,15 @@ export const suggestMaxPriorityFee = async (
 export const suggestFees = async (
   provider: JsonRpcProvider
 ): Promise<Suggestions> => {
-  const { baseFeeSuggestion, baseFeeTrend } = await suggestMaxBaseFee(provider);
+  const { baseFeeSuggestion, baseFeeTrend, currentBaseFee } =
+    await suggestMaxBaseFee(provider);
   const { maxPriorityFeeSuggestions, confirmationTimeByPriorityFee } =
     await suggestMaxPriorityFee(provider);
   return {
     baseFeeSuggestion,
     baseFeeTrend,
     confirmationTimeByPriorityFee,
+    currentBaseFee,
     maxPriorityFeeSuggestions,
   };
 };
