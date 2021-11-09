@@ -19,12 +19,12 @@ export interface FeeHistoryResponse {
 /**
  * Max base fee related suggestions
  *
- * @member baseFeeSuggestion - Base fee suggestion in wei string
+ * @member maxBaseFeeSuggestion - Base fee suggestion in wei string
  * @member baseFeeTrend - Estimated trend
  * @member currentBaseFee - Current block base fee in wei string
  */
 export interface MaxFeeSuggestions {
-  baseFeeSuggestion: string;
+  maxBaseFeeSuggestion: string;
   baseFeeTrend: number;
   currentBaseFee: string;
 }
