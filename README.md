@@ -1,40 +1,8 @@
-# 🔥 EIP-1559 fee suggestions 🔥
+# 🔥 EIP-1559 Fee Suggestions 🔥
 
- The function suggestFees() is a utility function written in Javascript and it's intended to use with an [ethers.js](https://docs.ethers.io/v5/) provider.
+The function `suggestFees()` is a utility function written in Javascript and it's intended to use with an [ethers.js](https://docs.ethers.io/v5/) provider.
  
-It returns a list of suggested maxFeePerGas / maxPriorityFeePerGas pairs where the index of the list is the timeFactor. 
-
-A low timeFactor should be used for urgent transactions while higher values yield more economical suggestions that are expected to require more blocks to get included with a given chance. 
- 
-Note that the relationship between timeFactor and inclusion chance in future blocks is not exactly determined but depends on the market behavior. Some rough estimates for this relationship might be calculated once we have actual market data to analyze.
-
-The application frontend might display the fees vs time factor as a bar graph or curve. The steepness of this curve might also give a hint to users on whether there is currently a local congestion.
-
-The return value is an array that looks like this:
-
-```
-[
-  { maxFeePerGas: 1026172753, maxPriorityFeePerGas: 1026172744 },
-  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172744 },
-  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172744 },
-  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172744 },
-  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172744 },
-  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172744 },
-  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172744 },
-  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172744 },
-  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172744 },
-  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172744 },
-  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172744 },
-  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172744 },
-  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172744 },
-  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172744 },
-  { maxFeePerGas: 1026172752, maxPriorityFeePerGas: 1026172744 },
-  { maxFeePerGas: 1026172751, maxPriorityFeePerGas: 1026172744 }
-]
-```
-
-The first element corresponds to the highest time preference (most urgent transaction).
-The basic idea behind the algorithm is similar to the old "gas price oracle" used in Geth; it takes the prices of recent blocks and makes a suggestion based on a low percentile of those prices. With EIP-1559 though the base fee of each block provides a less noisy and more reliable price signal. This allows for more sophisticated suggestions with a variable width (exponentially weighted) base fee time window. The window width corresponds to the time preference of the user. The underlying assumption is that price fluctuations over a given past time period indicate the probabilty of similar price levels being re-tested by the market over a similar length future time period.
+It returns an object containing `maxBaseFee` and `maxPriorityFee` suggestions, `baseFeeTrend` indicator, `currentBaseFee` and `confirmationTimeByPriorityFee` object containing estimated times of confirmation by priority fee chosen. 
 
 ### Usage
 
@@ -45,33 +13,43 @@ import { suggestFees } from './src';
 const main = async() => {
     const provider = new JsonRpcProvider(`https://ropsten.infura.io/v3/${YOUR_API_KEY}`);
     const ret = await suggestFees(provider);
-    console.log('Result');
-    console.log(ret);
-    console.log('done');
+    console.log('Result: ', ret);
 }
 
 main();
 ```
 
-Optional parameters are:
+In addition, you can use specific methods to get `maxBaseFee` and `maxPriorityFee` specific data.
 
- - `blockCountHistory` defaults to `100`
- - `sampleMin` defaults to  `0.1`
- - `sampleMax` defaults to `0.3`
- - `maxTimeFactor`  defaults to `15`
- - `extraTipRatio` defaults to  `0.25`
- - `fallbackTip` defaults to `2e9`
+```
+import { JsonRpcProvider } from '@ethersproject/providers';
+import { suggestFees } from './src';
 
-### To test it locally
+const main = async() => {
+    const provider = new JsonRpcProvider(`https://ropsten.infura.io/v3/${YOUR_API_KEY}`);
+    const fromBlock = 'latest' // the block that you want to run the estimations from
+    const blockCountHistory = 100 // the quantity of blocks you want to take in account for the estimation
+    const ret = await suggestMaxBaseFee(provider, fromBlock, blockCountHistory);
+    console.log('Result: ', ret);
+}
 
-1 - Install deps via `yarn`
+main();
+```
 
-2 - Add your Infura API_KEY on `demo.ts:4`
+```
+import { JsonRpcProvider } from '@ethersproject/providers';
+import { suggestFees } from './src';
 
-3 - `yarn start`
+const main = async() => {
+    const provider = new JsonRpcProvider(`https://ropsten.infura.io/v3/${YOUR_API_KEY}`);
+    const fromBlock = 'latest' // the block that you want to run the estimations from
+    const ret = await suggestMaxPriorityFee(provider, fromBlock, blockCountHistory);
+    console.log('Result: ', ret);
+}
+
+main();
+```
 
 ### Credits
 
-This code is 100% based on the work of [@zsfelfoldi](https://github.com/zsfelfoldi) published at https://github.com/zsfelfoldi/feehistory/
-
-It only adds compatibility for ethers and some JS related minor changes.
+The `suggestMaxBaseFee` estimations code is 100% based on the work of [@zsfelfoldi](https://github.com/zsfelfoldi) published at https://github.com/zsfelfoldi/feehistory/
