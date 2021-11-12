@@ -20,9 +20,6 @@ export const suggestMaxBaseFee = async (
   provider: JsonRpcProvider,
   fromBlock = 'latest',
   blockCountHistory = 100,
-  sampleMin = 0.1,
-  sampleMax = 0.3,
-  maxTimeFactor = 15
 ): Promise<MaxFeeSuggestions> => {
   const feeHistory: FeeHistoryResponse = await provider.send('eth_feeHistory', [
     blockCountHistory,
@@ -64,8 +61,8 @@ export const suggestMaxBaseFee = async (
 
   const result = [];
   let maxBaseFee = 0;
-  for (let timeFactor = maxTimeFactor; timeFactor >= 0; timeFactor--) {
-    let bf = suggestBaseFee(baseFees, order, timeFactor, sampleMin, sampleMax);
+  for (let timeFactor = 15; timeFactor >= 0; timeFactor--) {
+    let bf = suggestBaseFee(baseFees, order, timeFactor, 0.1, 0.3);
     if (bf > maxBaseFee) {
       maxBaseFee = bf;
     } else {
@@ -76,7 +73,7 @@ export const suggestMaxBaseFee = async (
   const suggestedMaxBaseFee = Math.max(...result);
 
   return {
-    baseFeeSuggestion: gweiToWei(suggestedMaxBaseFee),
+    maxBaseFeeSuggestion: gweiToWei(suggestedMaxBaseFee),
     baseFeeTrend: trend,
     currentBaseFee,
   };
@@ -149,15 +146,15 @@ export const suggestMaxPriorityFee = async (
 export const suggestFees = async (
   provider: JsonRpcProvider
 ): Promise<Suggestions> => {
-  const { baseFeeSuggestion, baseFeeTrend, currentBaseFee } =
+  const { maxBaseFeeSuggestion, baseFeeTrend, currentBaseFee } =
     await suggestMaxBaseFee(provider);
   const { maxPriorityFeeSuggestions, confirmationTimeByPriorityFee } =
     await suggestMaxPriorityFee(provider);
   return {
-    baseFeeSuggestion,
     baseFeeTrend,
     confirmationTimeByPriorityFee,
     currentBaseFee,
+    maxBaseFeeSuggestion,
     maxPriorityFeeSuggestions,
   };
 };
