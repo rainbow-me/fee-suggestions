@@ -1,4 +1,6 @@
 import BigNumber from 'bignumber.js';
+import { std } from 'mathjs';
+import { ma } from 'moving-averages';
 import { Reward } from './entities';
 
 type BigNumberish = number | string | BigNumber;
@@ -131,3 +133,31 @@ export const rewardsFilterOutliers = (
   blocksRewards
     .filter((_, index) => !outlierBlocks.includes(index))
     .map((reward) => weiToGweiNumber(reward[rewardIndex]));
+
+export const calculateTrend = (baseFees: number[]) => {
+  const standardDeviation = std(baseFees);
+  const movingAverage = ma(baseFees, baseFees.length)[baseFees.length - 1];
+  const lastMaxBaseFee = baseFees[baseFees.length - 1];
+
+  let trend = 0;
+  if (lastMaxBaseFee > movingAverage + 2 * standardDeviation) {
+    // surging
+    trend = 2;
+  } else if (
+    lastMaxBaseFee > movingAverage + standardDeviation &&
+    lastMaxBaseFee < movingAverage + 2 * standardDeviation
+  ) {
+    // rising
+    trend = 1;
+  } else if (
+    lastMaxBaseFee > movingAverage - standardDeviation &&
+    lastMaxBaseFee < movingAverage + standardDeviation
+  ) {
+    // stable
+    trend = 0;
+  } else if (lastMaxBaseFee < movingAverage - standardDeviation) {
+    // falling
+    trend = -1;
+  }
+  return trend;
+};

@@ -7,9 +7,9 @@ import {
   Suggestions,
 } from './entities';
 import {
+  calculateTrend,
   getOutlierBlocksToRemove,
   gweiToWei,
-  linearRegression,
   rewardsFilterOutliers,
   suggestBaseFee,
   weiToGweiNumber,
@@ -20,6 +20,7 @@ export const suggestMaxBaseFee = async (
   provider: JsonRpcProvider,
   fromBlock = 'latest',
   blockCountHistory = 100,
+  blockCountHistoryForTrends = 50
 ): Promise<MaxFeeSuggestions> => {
   const feeHistory: FeeHistoryResponse = await provider.send('eth_feeHistory', [
     blockCountHistory,
@@ -37,8 +38,10 @@ export const suggestMaxBaseFee = async (
     order.push(i);
   }
 
-  const blocksArray = Array.from(Array(blockCountHistory + 1).keys());
-  const trend = linearRegression(baseFees, blocksArray);
+  const baseFeesForTrend = baseFees.slice(
+    blockCountHistory - blockCountHistoryForTrends
+  );
+  const trend = calculateTrend(baseFeesForTrend);
 
   baseFees[baseFees.length - 1] *= 9 / 8;
   for (let i = feeHistory.gasUsedRatio.length - 1; i >= 0; i--) {
@@ -73,9 +76,9 @@ export const suggestMaxBaseFee = async (
   const suggestedMaxBaseFee = Math.max(...result);
 
   return {
-    maxBaseFeeSuggestion: gweiToWei(suggestedMaxBaseFee),
     baseFeeTrend: trend,
     currentBaseFee,
+    maxBaseFeeSuggestion: gweiToWei(suggestedMaxBaseFee),
   };
 };
 

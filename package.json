@@ -33,6 +33,7 @@
     "@ethersproject/providers": "^5.5.0",
     "bignumber.js": "^9.0.1",
     "ethers": "^5.4.2",
+    "mathjs": "^10.0.0",
     "moving-averages": "^4.0.6"
   },
   "devDependencies": {
