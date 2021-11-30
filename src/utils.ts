@@ -139,6 +139,14 @@ export const rewardsFilterOutliers = (
     .filter((_, index) => !outlierBlocks.includes(index))
     .map((reward) => weiToGweiNumber(reward[rewardIndex]));
 
+const calculateGroupInfo = (baseFees: number[]) => {
+  const sortedBaseFees = baseFees.sort((a, b) => a - b);
+  const min = sortedBaseFees[0];
+  const max = sortedBaseFees[sortedBaseFees.length - 1];
+  const median = sortedBaseFees[Math.floor(sortedBaseFees.length / 2)];
+  return { max, median, min };
+};
+
 const createSubsets = (numbers: number[], n: number) => {
   const subsets = [];
   for (let i = 0; i < numbers.length; i = i + n) {
@@ -147,32 +155,22 @@ const createSubsets = (numbers: number[], n: number) => {
   return subsets;
 };
 
-const calculateSubsetInfo = (baseFees: number[]) => {
-  const sortedBaseFees = baseFees.sort((a, b) => a - b);
-  const min = sortedBaseFees[0];
-  const max = sortedBaseFees[sortedBaseFees.length - 1];
-  const median = sortedBaseFees[Math.floor(sortedBaseFees.length / 2)];
-  return { max, median, min };
-};
-
-const getSubsetsData = (numbers: number[], n: number) => {
+export const getData = (numbers: number[], n: number) => {
   const subsets = createSubsets(numbers, n);
-  const subsetsInfo = subsets.map((subset) => calculateSubsetInfo(subset));
-  return subsetsInfo;
-};
-
-const getData = (numbers: number[], n: number) => {
-  const subsetsData = getSubsetsData(numbers, n);
-  const maxData = subsetsData.map((data) => data.max);
-  const minData = subsetsData.map((data) => data.min);
-  const medianData = subsetsData.map((data) => data.median);
+  const subsetsInfo = subsets.map((subset) => calculateGroupInfo(subset));
+  const {
+    max: lastMax,
+    min: lastMin,
+    median: lastMedian,
+  } = subsetsInfo[subsetsInfo.length - 1];
+  const medianData = subsetsInfo.map((data) => data.median);
   const medianSlope = linearRegression(medianData);
 
   return {
-    max: maxData[maxData.length - 1],
-    median: medianData[medianData.length - 1],
+    max: lastMax,
+    median: lastMedian,
     medianSlope,
-    min: minData[minData.length - 1],
+    min: lastMin,
   };
 };
 
