@@ -2,6 +2,12 @@ import BigNumber from 'bignumber.js';
 import { Reward } from './entities';
 
 type BigNumberish = number | string | BigNumber;
+const THRESHOLDS = {
+  FALLING: 0.725,
+  MEDIAN_SLOPE: -5,
+  RAISING: 1.275,
+  SURGING: 1.5,
+};
 
 const ethUnits = {
   gwei: 1000000000,
@@ -59,7 +65,8 @@ export const samplingCurve = (
   );
 };
 
-export const linearRegression = (y: number[], x: number[]) => {
+export const linearRegression = (y: number[]) => {
+  const x = Array.from(Array(y.length + 1).keys());
   const n = y.length;
   let sumX = 0;
   let sumY = 0;
@@ -131,3 +138,98 @@ export const rewardsFilterOutliers = (
   blocksRewards
     .filter((_, index) => !outlierBlocks.includes(index))
     .map((reward) => weiToGweiNumber(reward[rewardIndex]));
+
+const createSubsets = (numbers: number[], n: number) => {
+  const subsets = [];
+  for (let i = 0; i < numbers.length; i = i + n) {
+    subsets.push(numbers.slice(i, i + n));
+  }
+  return subsets;
+};
+
+const calculateSubsetInfo = (baseFees: number[]) => {
+  const sortedBaseFees = baseFees.sort((a, b) => a - b);
+  const min = sortedBaseFees[0];
+  const max = sortedBaseFees[sortedBaseFees.length - 1];
+  const median = sortedBaseFees[Math.floor(sortedBaseFees.length / 2)];
+  return { max, median, min };
+};
+
+const getSubsetsData = (numbers: number[], n: number) => {
+  const subsets = createSubsets(numbers, n);
+  const subsetsInfo = subsets.map((subset) => calculateSubsetInfo(subset));
+  return subsetsInfo;
+};
+
+const getData = (numbers: number[], n: number) => {
+  const subsetsData = getSubsetsData(numbers, n);
+  const maxData = subsetsData.map((data) => data.max);
+  const minData = subsetsData.map((data) => data.min);
+  const medianData = subsetsData.map((data) => data.median);
+  const medianSlope = linearRegression(medianData);
+
+  return {
+    max: maxData[maxData.length - 1],
+    median: medianData[medianData.length - 1],
+    medianSlope,
+    min: minData[minData.length - 1],
+  };
+};
+
+export const calculateBaseFeeTrend = (
+  baseFees: number[],
+  currentBaseFee: string
+) => {
+  let trend = 0;
+  try {
+    // taking 50 blocks
+    const baseFees50Blocks = baseFees.slice(51);
+    // divide it in groups of 5
+    const n50 = {
+      g5: getData(baseFees50Blocks, 5),
+    };
+
+    // taking 100 blocks
+    const baseFees100Blocks = baseFees.slice(1);
+    // divide it in groups of 25
+    const n100 = {
+      g25: getData(baseFees100Blocks, 25),
+    };
+
+    const maxByMedian = n100.g25.max / n100.g25.median;
+    const minByMedian = n100.g25.min / n100.g25.median;
+
+    if (maxByMedian > THRESHOLDS.SURGING) {
+      trend = 2;
+    } else if (
+      maxByMedian > THRESHOLDS.RAISING &&
+      minByMedian > THRESHOLDS.FALLING
+    ) {
+      trend = 1;
+    } else if (
+      maxByMedian < THRESHOLDS.RAISING &&
+      minByMedian > THRESHOLDS.FALLING
+    ) {
+      if (n50.g5.medianSlope < THRESHOLDS.MEDIAN_SLOPE) {
+        trend = -1;
+      } else {
+        trend = 0;
+      }
+    } else if (
+      maxByMedian < THRESHOLDS.RAISING &&
+      minByMedian < THRESHOLDS.FALLING
+    ) {
+      trend = -1;
+    } else {
+      // if none is on the threshold
+      if (weiToGweiNumber(currentBaseFee) > n100.g25.median) {
+        trend = 1;
+      } else {
+        trend = -1;
+      }
+    }
+  } catch (e) {
+    //
+  }
+  return trend;
+};

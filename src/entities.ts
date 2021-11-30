@@ -25,8 +25,8 @@ export interface FeeHistoryResponse {
  */
 export interface MaxFeeSuggestions {
   maxBaseFeeSuggestion: string;
-  baseFeeTrend: number;
   currentBaseFee: string;
+  baseFeeTrend: number;
 }
 
 /**
