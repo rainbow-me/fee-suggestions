@@ -7,9 +7,9 @@ import {
   Suggestions,
 } from './entities';
 import {
+  calculateBaseFeeTrend,
   getOutlierBlocksToRemove,
   gweiToWei,
-  linearRegression,
   rewardsFilterOutliers,
   suggestBaseFee,
   weiToGweiNumber,
@@ -19,7 +19,7 @@ import {
 export const suggestMaxBaseFee = async (
   provider: JsonRpcProvider,
   fromBlock = 'latest',
-  blockCountHistory = 100,
+  blockCountHistory = 100
 ): Promise<MaxFeeSuggestions> => {
   const feeHistory: FeeHistoryResponse = await provider.send('eth_feeHistory', [
     blockCountHistory,
@@ -29,16 +29,13 @@ export const suggestMaxBaseFee = async (
   const currentBaseFee = weiToString(
     feeHistory?.baseFeePerGas[feeHistory?.baseFeePerGas.length - 1]
   );
-
   const baseFees: number[] = [];
   const order = [];
   for (let i = 0; i < feeHistory.baseFeePerGas.length; i++) {
     baseFees.push(weiToGweiNumber(feeHistory.baseFeePerGas[i]));
     order.push(i);
   }
-
-  const blocksArray = Array.from(Array(blockCountHistory + 1).keys());
-  const trend = linearRegression(baseFees, blocksArray);
+  const baseFeeTrend = calculateBaseFeeTrend(baseFees, currentBaseFee);
 
   baseFees[baseFees.length - 1] *= 9 / 8;
   for (let i = feeHistory.gasUsedRatio.length - 1; i >= 0; i--) {
@@ -46,7 +43,6 @@ export const suggestMaxBaseFee = async (
       baseFees[i] = baseFees[i + 1];
     }
   }
-
   order.sort((a, b) => {
     const aa = baseFees[a];
     const bb = baseFees[b];
@@ -58,7 +54,6 @@ export const suggestMaxBaseFee = async (
     }
     return 0;
   });
-
   const result = [];
   let maxBaseFee = 0;
   for (let timeFactor = 15; timeFactor >= 0; timeFactor--) {
@@ -71,14 +66,12 @@ export const suggestMaxBaseFee = async (
     result[timeFactor] = bf;
   }
   const suggestedMaxBaseFee = Math.max(...result);
-
   return {
-    maxBaseFeeSuggestion: gweiToWei(suggestedMaxBaseFee),
-    baseFeeTrend: trend,
+    baseFeeSuggestion: gweiToWei(suggestedMaxBaseFee),
+    baseFeeTrend,
     currentBaseFee,
   };
 };
-
 export const suggestMaxPriorityFee = async (
   provider: JsonRpcProvider,
   fromBlock = 'latest'
@@ -142,19 +135,18 @@ export const suggestMaxPriorityFee = async (
     },
   };
 };
-
 export const suggestFees = async (
   provider: JsonRpcProvider
 ): Promise<Suggestions> => {
-  const { maxBaseFeeSuggestion, baseFeeTrend, currentBaseFee } =
+  const { baseFeeSuggestion, baseFeeTrend, currentBaseFee } =
     await suggestMaxBaseFee(provider);
   const { maxPriorityFeeSuggestions, confirmationTimeByPriorityFee } =
     await suggestMaxPriorityFee(provider);
   return {
+    baseFeeSuggestion,
     baseFeeTrend,
     confirmationTimeByPriorityFee,
     currentBaseFee,
-    maxBaseFeeSuggestion,
     maxPriorityFeeSuggestions,
   };
 };
