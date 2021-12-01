@@ -67,9 +67,9 @@ export const suggestMaxBaseFee = async (
   }
   const suggestedMaxBaseFee = Math.max(...result);
   return {
+    baseFeeSuggestion: gweiToWei(suggestedMaxBaseFee),
     baseFeeTrend,
     currentBaseFee,
-    maxBaseFeeSuggestion: gweiToWei(suggestedMaxBaseFee),
   };
 };
 export const suggestMaxPriorityFee = async (
@@ -138,15 +138,15 @@ export const suggestMaxPriorityFee = async (
 export const suggestFees = async (
   provider: JsonRpcProvider
 ): Promise<Suggestions> => {
-  const { maxBaseFeeSuggestion, baseFeeTrend, currentBaseFee } =
+  const { baseFeeSuggestion, baseFeeTrend, currentBaseFee } =
     await suggestMaxBaseFee(provider);
   const { maxPriorityFeeSuggestions, confirmationTimeByPriorityFee } =
     await suggestMaxPriorityFee(provider);
   return {
+    baseFeeSuggestion,
     baseFeeTrend,
     confirmationTimeByPriorityFee,
     currentBaseFee,
-    maxBaseFeeSuggestion,
     maxPriorityFeeSuggestions,
   };
 };
