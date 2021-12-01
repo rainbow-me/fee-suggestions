@@ -108,10 +108,18 @@ export const suggestMaxPriorityFee = async (
     3
   );
 
-  const emaPerc10 = ema(blocksRewardsPerc10, blocksRewardsPerc10.length).at(-1);
-  const emaPerc15 = ema(blocksRewardsPerc15, blocksRewardsPerc15.length).at(-1);
-  const emaPerc30 = ema(blocksRewardsPerc30, blocksRewardsPerc30.length).at(-1);
-  const emaPerc45 = ema(blocksRewardsPerc45, blocksRewardsPerc45.length).at(-1);
+  const emaPerc10 = ema(blocksRewardsPerc10, blocksRewardsPerc10.length)[
+    blocksRewardsPerc10.length - 1
+  ];
+  const emaPerc15 = ema(blocksRewardsPerc15, blocksRewardsPerc15.length)[
+    blocksRewardsPerc15.length - 1
+  ];
+  const emaPerc30 = ema(blocksRewardsPerc30, blocksRewardsPerc30.length)[
+    blocksRewardsPerc30.length - 1
+  ];
+  const emaPerc45 = ema(blocksRewardsPerc45, blocksRewardsPerc45.length)[
+    blocksRewardsPerc45.length - 1
+  ];
 
   if (
     emaPerc10 === undefined ||
