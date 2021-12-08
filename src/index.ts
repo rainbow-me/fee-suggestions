@@ -10,6 +10,7 @@ import {
   calculateBaseFeeTrend,
   getOutlierBlocksToRemove,
   gweiToWei,
+  multiply,
   rewardsFilterOutliers,
   suggestBaseFee,
   weiToGweiNumber,
@@ -65,7 +66,8 @@ export const suggestMaxBaseFee = async (
     }
     result[timeFactor] = bf;
   }
-  const suggestedMaxBaseFee = Math.max(...result);
+  const suggestedMaxBaseFee = multiply(Math.max(...result), 1.05);
+
   return {
     baseFeeSuggestion: gweiToWei(suggestedMaxBaseFee),
     baseFeeTrend,
