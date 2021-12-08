@@ -131,7 +131,7 @@ export const suggestMaxPriorityFee = async (
   )
     throw new Error('Error: ema was undefined');
 
-  const boundedNormalPriorityFee = Math.min(Math.max(emaPerc15, 1), 1.5);
+  const boundedNormalPriorityFee = Math.min(Math.max(emaPerc15, 1), 1.8);
   const boundedFastMaxPriorityFee = Math.min(Math.max(emaPerc30, 1.5), 3);
   const boundedUrgentPriorityFee = Math.min(Math.max(emaPerc45, 2), 9);
 
