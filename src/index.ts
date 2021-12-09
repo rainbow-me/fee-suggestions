@@ -10,6 +10,7 @@ import {
   calculateBaseFeeTrend,
   getOutlierBlocksToRemove,
   gweiToWei,
+  multiply,
   rewardsFilterOutliers,
   suggestBaseFee,
   weiToGweiNumber,
@@ -65,7 +66,8 @@ export const suggestMaxBaseFee = async (
     }
     result[timeFactor] = bf;
   }
-  const suggestedMaxBaseFee = Math.max(...result);
+  const suggestedMaxBaseFee = multiply(Math.max(...result), 1.05);
+
   return {
     baseFeeSuggestion: gweiToWei(suggestedMaxBaseFee),
     baseFeeTrend,
@@ -129,6 +131,10 @@ export const suggestMaxPriorityFee = async (
   )
     throw new Error('Error: ema was undefined');
 
+  const boundedNormalPriorityFee = Math.min(Math.max(emaPerc15, 1), 1.8);
+  const boundedFastMaxPriorityFee = Math.min(Math.max(emaPerc30, 1.5), 3);
+  const boundedUrgentPriorityFee = Math.min(Math.max(emaPerc45, 2), 9);
+
   return {
     confirmationTimeByPriorityFee: {
       15: gweiToWei(emaPerc45),
@@ -137,9 +143,9 @@ export const suggestMaxPriorityFee = async (
       60: gweiToWei(emaPerc10),
     },
     maxPriorityFeeSuggestions: {
-      fast: gweiToWei(Math.max(emaPerc30, 1.5)),
-      normal: gweiToWei(Math.max(emaPerc15, 1)),
-      urgent: gweiToWei(Math.max(emaPerc45, 2)),
+      fast: gweiToWei(boundedFastMaxPriorityFee),
+      normal: gweiToWei(boundedNormalPriorityFee),
+      urgent: gweiToWei(boundedUrgentPriorityFee),
     },
   };
 };
