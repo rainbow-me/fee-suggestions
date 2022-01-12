@@ -1,6 +1,21 @@
 export type Reward = string[];
 export type GasUsedRatio = number[];
 
+export interface BlocksToConfirmationByPriorityFee {
+  1: string;
+  2: string;
+  3: string;
+  4: string;
+}
+
+export interface BlocksToConfirmationByBaseFee {
+  4: string;
+  8: string;
+  40: string;
+  120: string;
+  240: string;
+}
+
 /**
  * Response interface from `eth_feeHistory` RPC call
  *
@@ -27,13 +42,7 @@ export interface FeeHistoryResponse {
 export interface MaxFeeSuggestions {
   baseFeeSuggestion: string;
   baseFeeTrend: number;
-  blocksToConfirmationByBaseFee: {
-    4: string;
-    8: string;
-    40: string;
-    120: string;
-    240: string;
-  };
+  blocksToConfirmationByBaseFee: BlocksToConfirmationByBaseFee;
   currentBaseFee: string;
 }
 
@@ -45,12 +54,7 @@ export interface MaxFeeSuggestions {
  * @member blocksToConfirmationByPriorityFee - Object containing estimated blocks that a confirmation is going to happen if `confirmationTimeByPriorityFee[blocks]` is used as `maxPriorityfee`, in wei string
  */
 export interface MaxPriorityFeeSuggestions {
-  blocksToConfirmationByPriorityFee: {
-    1: string;
-    2: string;
-    3: string;
-    4: string;
-  };
+  blocksToConfirmationByPriorityFee: BlocksToConfirmationByPriorityFee;
   confirmationTimeByPriorityFee: {
     15: string;
     30: string;
