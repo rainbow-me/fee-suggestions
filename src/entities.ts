@@ -22,10 +22,18 @@ export interface FeeHistoryResponse {
  * @member baseFeeSuggestion - Base fee suggestion in wei string
  * @member baseFeeTrend - Estimated trend
  * @member currentBaseFee - Current block base fee in wei string
+ * @member blocksToConfirmationByBaseFee - Object containing estimated blocks that a confirmation is going to happen if `blocksToConfirmationByBaseFee[blocks]` is used as `maxBasefee`, in wei string
  */
 export interface MaxFeeSuggestions {
   baseFeeSuggestion: string;
   baseFeeTrend: number;
+  blocksToConfirmationByBaseFee: {
+    4: string;
+    8: string;
+    40: string;
+    120: string;
+    240: string;
+  };
   currentBaseFee: string;
 }
 
@@ -34,8 +42,15 @@ export interface MaxFeeSuggestions {
  *
  * @member maxPriorityFeeSuggestions - Object containing max priority fee in wei string per speeds, `urgent`, `fast` and `normal`
  * @member confirmationTimeByPriorityFee - Object containing estimated seconds that a confirmation is going to happen if `confirmationTimeByPriorityFee[secs]` is used as `maxPriorityfee`, in wei string
+ * @member blocksToConfirmationByPriorityFee - Object containing estimated blocks that a confirmation is going to happen if `confirmationTimeByPriorityFee[blocks]` is used as `maxPriorityfee`, in wei string
  */
 export interface MaxPriorityFeeSuggestions {
+  blocksToConfirmationByPriorityFee: {
+    1: string;
+    2: string;
+    3: string;
+    4: string;
+  };
   confirmationTimeByPriorityFee: {
     15: string;
     30: string;

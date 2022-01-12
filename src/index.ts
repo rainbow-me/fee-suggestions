@@ -1,5 +1,6 @@
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { ema } from 'moving-averages';
+import { BASE_FEE_BLOCKS_TO_CONFIRMATION_MULTIPLIERS } from './constants';
 import {
   FeeHistoryResponse,
   MaxFeeSuggestions,
@@ -68,9 +69,33 @@ export const suggestMaxBaseFee = async (
   }
   const suggestedMaxBaseFee = multiply(Math.max(...result), 1.05);
 
+  const blocksToConfirmationByBaseFee = {
+    120: multiply(
+      suggestedMaxBaseFee,
+      BASE_FEE_BLOCKS_TO_CONFIRMATION_MULTIPLIERS[120]
+    ).toFixed(0),
+    240: multiply(
+      suggestedMaxBaseFee,
+      BASE_FEE_BLOCKS_TO_CONFIRMATION_MULTIPLIERS[240]
+    ).toFixed(0),
+    4: multiply(
+      suggestedMaxBaseFee,
+      BASE_FEE_BLOCKS_TO_CONFIRMATION_MULTIPLIERS[4]
+    ).toFixed(0),
+    40: multiply(
+      suggestedMaxBaseFee,
+      BASE_FEE_BLOCKS_TO_CONFIRMATION_MULTIPLIERS[40]
+    ).toFixed(0),
+    8: multiply(
+      suggestedMaxBaseFee,
+      BASE_FEE_BLOCKS_TO_CONFIRMATION_MULTIPLIERS[8]
+    ).toFixed(0),
+  };
+
   return {
     baseFeeSuggestion: gweiToWei(suggestedMaxBaseFee),
     baseFeeTrend,
+    blocksToConfirmationByBaseFee,
     currentBaseFee,
   };
 };
@@ -136,6 +161,12 @@ export const suggestMaxPriorityFee = async (
   const boundedUrgentPriorityFee = Math.min(Math.max(emaPerc45, 2), 9);
 
   return {
+    blocksToConfirmationByPriorityFee: {
+      1: gweiToWei(emaPerc45),
+      2: gweiToWei(emaPerc30),
+      3: gweiToWei(emaPerc15),
+      4: gweiToWei(emaPerc10),
+    },
     confirmationTimeByPriorityFee: {
       15: gweiToWei(emaPerc45),
       30: gweiToWei(emaPerc30),
@@ -152,13 +183,22 @@ export const suggestMaxPriorityFee = async (
 export const suggestFees = async (
   provider: JsonRpcProvider
 ): Promise<Suggestions> => {
-  const { baseFeeSuggestion, baseFeeTrend, currentBaseFee } =
-    await suggestMaxBaseFee(provider);
-  const { maxPriorityFeeSuggestions, confirmationTimeByPriorityFee } =
-    await suggestMaxPriorityFee(provider);
+  const {
+    baseFeeSuggestion,
+    baseFeeTrend,
+    currentBaseFee,
+    blocksToConfirmationByBaseFee,
+  } = await suggestMaxBaseFee(provider);
+  const {
+    maxPriorityFeeSuggestions,
+    confirmationTimeByPriorityFee,
+    blocksToConfirmationByPriorityFee,
+  } = await suggestMaxPriorityFee(provider);
   return {
     baseFeeSuggestion,
     baseFeeTrend,
+    blocksToConfirmationByBaseFee,
+    blocksToConfirmationByPriorityFee,
     confirmationTimeByPriorityFee,
     currentBaseFee,
     maxPriorityFeeSuggestions,
