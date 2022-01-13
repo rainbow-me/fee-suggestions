@@ -1,3 +1,5 @@
+export const BASE_FEE_ADDITIONAL_PADDING = 1.05;
+
 export const TREND_THRESHOLDS = {
   FALLING: 0.725,
   MEDIAN_SLOPE: -5,

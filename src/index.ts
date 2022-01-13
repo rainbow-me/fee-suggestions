@@ -1,6 +1,9 @@
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { ema } from 'moving-averages';
-import { BASE_FEE_BLOCKS_TO_CONFIRMATION_MULTIPLIERS } from './constants';
+import {
+  BASE_FEE_ADDITIONAL_PADDING,
+  BASE_FEE_BLOCKS_TO_CONFIRMATION_MULTIPLIERS,
+} from './constants';
 import {
   FeeHistoryResponse,
   MaxFeeSuggestions,
@@ -67,7 +70,9 @@ export const suggestMaxBaseFee = async (
     }
     result[timeFactor] = bf;
   }
-  const baseFeeSuggestion = gweiToWei(multiply(Math.max(...result), 1.05));
+  const baseFeeSuggestion = gweiToWei(
+    multiply(Math.max(...result), BASE_FEE_ADDITIONAL_PADDING)
+  );
 
   const blocksToConfirmationByBaseFee = {
     120: multiply(
