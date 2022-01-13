@@ -67,33 +67,33 @@ export const suggestMaxBaseFee = async (
     }
     result[timeFactor] = bf;
   }
-  const suggestedMaxBaseFee = multiply(Math.max(...result), 1.05);
+  const baseFeeSuggestion = gweiToWei(multiply(Math.max(...result), 1.05));
 
   const blocksToConfirmationByBaseFee = {
     120: multiply(
-      suggestedMaxBaseFee,
+      baseFeeSuggestion,
       BASE_FEE_BLOCKS_TO_CONFIRMATION_MULTIPLIERS[120]
     ).toFixed(0),
     240: multiply(
-      suggestedMaxBaseFee,
+      baseFeeSuggestion,
       BASE_FEE_BLOCKS_TO_CONFIRMATION_MULTIPLIERS[240]
     ).toFixed(0),
     4: multiply(
-      suggestedMaxBaseFee,
+      baseFeeSuggestion,
       BASE_FEE_BLOCKS_TO_CONFIRMATION_MULTIPLIERS[4]
     ).toFixed(0),
     40: multiply(
-      suggestedMaxBaseFee,
+      baseFeeSuggestion,
       BASE_FEE_BLOCKS_TO_CONFIRMATION_MULTIPLIERS[40]
     ).toFixed(0),
     8: multiply(
-      suggestedMaxBaseFee,
+      baseFeeSuggestion,
       BASE_FEE_BLOCKS_TO_CONFIRMATION_MULTIPLIERS[8]
     ).toFixed(0),
   };
 
   return {
-    baseFeeSuggestion: gweiToWei(suggestedMaxBaseFee),
+    baseFeeSuggestion,
     baseFeeTrend,
     blocksToConfirmationByBaseFee,
     currentBaseFee,
