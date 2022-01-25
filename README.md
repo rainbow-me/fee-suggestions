@@ -2,7 +2,13 @@
 
 The function `suggestFees()` is a utility function written in Javascript and it's intended to use with an [ethers.js](https://docs.ethers.io/v5/) provider.
  
-It returns an object containing `maxBaseFee` and `maxPriorityFee` suggestions, `baseFeeTrend` indicator, `currentBaseFee` and `confirmationTimeByPriorityFee` object containing estimated times of confirmation by priority fee chosen. 
+It returns an object containing:
+- `maxBaseFee` and `maxPriorityFee` suggestions
+- `baseFeeTrend` indicator
+- `currentBaseFee` which is the current block base fee
+- `confirmationTimeByPriorityFee` an object containing estimated times of confirmation by priority fee chosen
+- `blocksToConfirmationByPriorityFee` an object containing estimated blocks of wait for a confirmation by priority fee chosen
+- `blocksToConfirmationByBaseFee` an object containing estimated blocks of wait for a confirmation by base fee chosen
 
 ### Usage
 
