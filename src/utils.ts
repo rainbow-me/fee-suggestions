@@ -1,17 +1,14 @@
 import BigNumber from 'bignumber.js';
+import { TREND_THRESHOLDS } from './constants';
 import { Reward } from './entities';
 
 type BigNumberish = number | string | BigNumber;
-const THRESHOLDS = {
-  FALLING: 0.725,
-  MEDIAN_SLOPE: -5,
-  RAISING: 1.275,
-  SURGING: 1.5,
-};
 
 const ethUnits = {
   gwei: 1000000000,
 };
+
+const { FALLING, MEDIAN_SLOPE, RAISING, SURGING } = TREND_THRESHOLDS;
 
 export const multiply = (
   numberOne: BigNumberish,
@@ -197,26 +194,17 @@ export const calculateBaseFeeTrend = (
     const maxByMedian = n100.g25.max / n100.g25.median;
     const minByMedian = n100.g25.min / n100.g25.median;
 
-    if (maxByMedian > THRESHOLDS.SURGING) {
+    if (maxByMedian > SURGING) {
       trend = 2;
-    } else if (
-      maxByMedian > THRESHOLDS.RAISING &&
-      minByMedian > THRESHOLDS.FALLING
-    ) {
+    } else if (maxByMedian > RAISING && minByMedian > FALLING) {
       trend = 1;
-    } else if (
-      maxByMedian < THRESHOLDS.RAISING &&
-      minByMedian > THRESHOLDS.FALLING
-    ) {
-      if (n50.g5.medianSlope < THRESHOLDS.MEDIAN_SLOPE) {
+    } else if (maxByMedian < RAISING && minByMedian > FALLING) {
+      if (n50.g5.medianSlope < MEDIAN_SLOPE) {
         trend = -1;
       } else {
         trend = 0;
       }
-    } else if (
-      maxByMedian < THRESHOLDS.RAISING &&
-      minByMedian < THRESHOLDS.FALLING
-    ) {
+    } else if (maxByMedian < RAISING && minByMedian < FALLING) {
       trend = -1;
     } else {
       // if none is on the threshold
