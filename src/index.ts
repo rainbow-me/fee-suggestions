@@ -1,4 +1,5 @@
 import { JsonRpcProvider } from '@ethersproject/providers';
+import { utils } from 'ethers';
 import { ema } from 'moving-averages';
 import {
   BASE_FEE_ADDITIONAL_PADDING,
@@ -27,7 +28,7 @@ export const suggestMaxBaseFee = async (
   blockCountHistory = 100
 ): Promise<MaxFeeSuggestions> => {
   const feeHistory: FeeHistoryResponse = await provider.send('eth_feeHistory', [
-    blockCountHistory,
+    utils.hexStripZeros(utils.hexlify(blockCountHistory)),
     fromBlock,
     [],
   ]);
@@ -109,7 +110,7 @@ export const suggestMaxPriorityFee = async (
   fromBlock = 'latest'
 ): Promise<MaxPriorityFeeSuggestions> => {
   const feeHistory: FeeHistoryResponse = await provider.send('eth_feeHistory', [
-    10,
+    utils.hexStripZeros(utils.hexlify(10)),
     fromBlock,
     [10, 15, 30, 45],
   ]);
