@@ -145,7 +145,7 @@ const calculateGroupInfo = (baseFees: number[]) => {
 };
 
 const createSubsets = (numbers: number[], n: number) => {
-  const subsets = [];
+  const subsets: number[][] = [];
   for (let i = 0; i < numbers.length; i = i + n) {
     subsets.push(numbers.slice(i, i + n));
   }
