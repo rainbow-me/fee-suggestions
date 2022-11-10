@@ -36,7 +36,7 @@ export const suggestMaxBaseFee = async (
     feeHistory?.baseFeePerGas[feeHistory?.baseFeePerGas.length - 1]
   );
   const baseFees: number[] = [];
-  const order = [];
+  const order: number[] = [];
   for (let i = 0; i < feeHistory.baseFeePerGas.length; i++) {
     baseFees.push(weiToGweiNumber(feeHistory.baseFeePerGas[i]));
     order.push(i);
@@ -60,7 +60,7 @@ export const suggestMaxBaseFee = async (
     }
     return 0;
   });
-  const result = [];
+  const result: number[] = [];
   let maxBaseFee = 0;
   for (let timeFactor = 15; timeFactor >= 0; timeFactor--) {
     let bf = suggestBaseFee(baseFees, order, timeFactor, 0.1, 0.3);
